@@ -1,91 +1,51 @@
-use aoc_runner_derive::aoc;
+use std::num::NonZeroU32;
+use std::str::FromStr;
 
-#[aoc(day1, part1, Bytes)]
-pub fn part1_bytes(input: &[u8]) -> i32 {
-    input.iter().fold(0, |sum, c| match c {
-        b'(' => sum + 1,
-        b')' => sum - 1,
-        _ => unreachable!(),
-    })
-}
+use aoc_runner_derive::{aoc, aoc_generator};
+use itertools::Itertools;
 
-#[aoc(day1, part1, Chars)]
-pub fn part1_chars(input: &str) -> i32 {
-    input.chars().fold(0, |sum, c| match c {
-        '(' => sum + 1,
-        ')' => sum - 1,
-        _ => unreachable!(),
-    })
-}
-
-#[aoc(day1, part2)]
-pub fn part2(input: &str) -> usize {
-    let mut sum: u32 = 0;
-
-    for (i, c) in input.as_bytes().iter().enumerate() {
-        match c {
-            b'(' => sum += 1,
-            b')' => {
-                if let Some(s) = sum.checked_sub(1) {
-                    sum = s;
-                } else {
-                    return i + 1;
-                }
+#[aoc_generator(day1)]
+pub fn input_generator(input: &str) -> Vec<Vec<u32>> {
+    let all_calories = input
+        .lines()
+        .map(|l| {
+            if l.is_empty() {
+                0
+            } else {
+                NonZeroU32::from_str(l).unwrap().get()
             }
-            _ => unreachable!(),
+        }).collect_vec();
+    let mut calories_grouped = vec![];
+    let mut current_group: Vec<u32> = vec![];
+    for calorie in all_calories {
+        if calorie != 0 {
+            current_group.push(calorie);
+        } else {
+            calories_grouped.push(current_group);
+            current_group = vec![];
         }
     }
 
-    unreachable!()
+    if !current_group.is_empty() {
+        calories_grouped.push(current_group);
+    }
+
+    calories_grouped
 }
 
-#[cfg(test)]
-mod tests {
-    use super::{part1_chars as part1, part2};
+#[aoc(day1, part1)]
+pub fn part1(input: &[Vec<u32>]) -> u32 {
+    input.iter()
+        .map(|calories| calories.iter().sum())
+        .max()
+        .unwrap()
+}
 
-    // (()) and ()() both result in floor 0.
-    #[test]
-    fn sample1() {
-        assert_eq!(part1("(())"), 0);
-        assert_eq!(part1("()()"), 0);
-    }
-
-    // ((( and (()(()( both result in floor 3.
-    #[test]
-    fn sample2() {
-        assert_eq!(part1("((("), 3);
-        assert_eq!(part1("(()(()("), 3);
-    }
-
-    // ))((((( also results in floor 3.
-    #[test]
-    fn sample3() {
-        assert_eq!(part1("))((((("), 3);
-    }
-
-    // ()) and ))( both result in floor -1 (the first basement level).
-    #[test]
-    fn sample4() {
-        assert_eq!(part1("())"), -1);
-        assert_eq!(part1("))("), -1);
-    }
-
-    // ))) and )())()) both result in floor -3.
-    #[test]
-    fn sample5() {
-        assert_eq!(part1(")))"), -3);
-        assert_eq!(part1(")())())"), -3);
-    }
-
-    // ) causes him to enter the basement at character position 1.
-    #[test]
-    fn sample6() {
-        assert_eq!(part2(")"), 1);
-    }
-
-    // ()()) causes him to enter the basement at character position 5.
-    #[test]
-    fn sample7() {
-        assert_eq!(part2("()())"), 5);
-    }
+#[aoc(day1, part2)]
+pub fn part2(input: &[Vec<u32>]) -> u32 {
+    input.iter()
+        .map(|calories| calories.iter().sum())
+        .sorted_by(|c1: &u32, c2: &u32| c1.cmp(c2).reverse())
+        .take(3)
+        .sum()
 }
