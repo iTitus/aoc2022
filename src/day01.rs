@@ -1,20 +1,28 @@
-use std::num::NonZeroU32;
+use std::cmp::Reverse;
 use std::str::FromStr;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use itertools::Itertools;
 
+type Num = u32;
+
 #[aoc_generator(day1)]
-pub fn input_generator(input: &str) -> Vec<Vec<u32>> {
+pub fn input_generator(input: &str) -> Vec<Vec<Num>> {
     let all_calories = input
         .lines()
         .map(|l| {
             if l.is_empty() {
                 0
             } else {
-                NonZeroU32::from_str(l).unwrap().get()
+                let result = Num::from_str(l).unwrap();
+                if result == 0 {
+                    panic!();
+                }
+
+                result
             }
         }).collect_vec();
+
     let mut calories_grouped = vec![];
     let mut current_group = vec![];
     for calorie in all_calories {
@@ -34,7 +42,7 @@ pub fn input_generator(input: &str) -> Vec<Vec<u32>> {
 }
 
 #[aoc(day1, part1)]
-pub fn part1(input: &[Vec<u32>]) -> u32 {
+pub fn part1(input: &[Vec<Num>]) -> Num {
     input.iter()
         .map(|calories| calories.iter().sum())
         .max()
@@ -42,10 +50,10 @@ pub fn part1(input: &[Vec<u32>]) -> u32 {
 }
 
 #[aoc(day1, part2)]
-pub fn part2(input: &[Vec<u32>]) -> u32 {
+pub fn part2(input: &[Vec<Num>]) -> Num {
     input.iter()
         .map(|calories| calories.iter().sum())
-        .sorted_by(|c1: &u32, c2: &u32| c1.cmp(c2).reverse())
+        .sorted_unstable_by_key(|c: &Num| Reverse(*c))
         .take(3)
         .sum()
 }
