@@ -16,7 +16,7 @@ pub fn input_generator(input: &str) -> Vec<Vec<u32>> {
             }
         }).collect_vec();
     let mut calories_grouped = vec![];
-    let mut current_group: Vec<u32> = vec![];
+    let mut current_group = vec![];
     for calorie in all_calories {
         if calorie != 0 {
             current_group.push(calorie);
