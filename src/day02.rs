@@ -1,4 +1,4 @@
-use aoc_runner_derive::{aoc, aoc_generator};
+/*use aoc_runner_derive::{aoc, aoc_generator};
 
 type Gift = (u32, u32, u32);
 
@@ -88,4 +88,4 @@ mod tests {
     fn example4() {
         assert_eq!(solve_part2(&input_generator("1x1x10")), 14);
     }
-}
+}*/
