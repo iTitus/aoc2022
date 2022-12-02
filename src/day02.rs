@@ -1,91 +1,137 @@
-/*use aoc_runner_derive::{aoc, aoc_generator};
+use std::str::FromStr;
 
-type Gift = (u32, u32, u32);
+use aoc_runner_derive::{aoc, aoc_generator};
+use itertools::Itertools;
+
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+pub enum Hand {
+    Rock,
+    Paper,
+    Scissors,
+}
+
+impl Hand {
+    pub fn score(&self) -> u32 {
+        match self {
+            Hand::Rock => 1,
+            Hand::Paper => 2,
+            Hand::Scissors => 3,
+        }
+    }
+
+    pub fn winning_score(&self, other: &Hand) -> u32 {
+        match (self, other) {
+            (a, b)  if a == b => 3,
+            (Hand::Rock, Hand::Paper) => 0,
+            (Hand::Rock, Hand::Scissors) => 6,
+            (Hand::Paper, Hand::Rock) => 6,
+            (Hand::Paper, Hand::Scissors) => 0,
+            (Hand::Scissors, Hand::Rock) => 0,
+            (Hand::Scissors, Hand::Paper) => 6,
+            _ => unreachable!()
+        }
+    }
+}
+
+pub enum Left {
+    A,
+    B,
+    C,
+}
+
+impl Left {
+    pub fn to_hand(&self) -> Hand {
+        match self {
+            Left::A => Hand::Rock,
+            Left::B => Hand::Paper,
+            Left::C => Hand::Scissors,
+        }
+    }
+}
+
+impl FromStr for Left {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "A" => Ok(Left::A),
+            "B" => Ok(Left::B),
+            "C" => Ok(Left::C),
+            _ => Err(())
+        }
+    }
+}
+
+pub enum Right {
+    X,
+    Y,
+    Z,
+}
+
+impl Right {
+    pub fn to_hand(&self) -> Hand {
+        match self {
+            Right::X => Hand::Rock,
+            Right::Y => Hand::Paper,
+            Right::Z => Hand::Scissors,
+        }
+    }
+
+    pub fn to_desired_hand(&self, other_hand: &Hand) -> Hand {
+        match (self, other_hand) {
+            (Self::X, Hand::Rock) => Hand::Scissors,
+            (Self::X, Hand::Paper) => Hand::Rock,
+            (Self::X, Hand::Scissors) => Hand::Paper,
+            (Self::Y, other_hand) => *other_hand,
+            (Self::Z, Hand::Rock) => Hand::Paper,
+            (Self::Z, Hand::Paper) => Hand::Scissors,
+            (Self::Z, Hand::Scissors) => Hand::Rock,
+        }
+    }
+}
+
+impl FromStr for Right {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "X" => Ok(Right::X),
+            "Y" => Ok(Right::Y),
+            "Z" => Ok(Right::Z),
+            _ => Err(())
+        }
+    }
+}
 
 #[aoc_generator(day2)]
-pub fn input_generator(input: &str) -> Vec<Gift> {
+pub fn input_generator(input: &str) -> Vec<(Left, Right)> {
     input
         .lines()
         .map(|l| {
-            let mut gift = l.trim().split('x').map(|d| d.parse().unwrap());
-            (
-                gift.next().unwrap(),
-                gift.next().unwrap(),
-                gift.next().unwrap(),
-            )
+            let v = l.trim().splitn(2, ' ').collect_vec();
+            (Left::from_str(v[0]).unwrap(), Right::from_str(v[1]).unwrap())
         })
         .collect()
 }
 
 #[aoc(day2, part1)]
-pub fn solve_part1(input: &[Gift]) -> u32 {
-    input
-        .iter()
-        .map(|&(l, w, h)| {
-            let (s1, s2) = smallest_side((l, w, h));
-
-            2 * l * w + 2 * w * h + 2 * h * l + s1 * s2
-        })
-        .sum()
-}
-
-#[aoc(day2, part1, for_loop)]
-pub fn solve_part1_for(input: &[Gift]) -> u32 {
-    let mut sum = 0;
-
-    for &(l, w, h) in input {
-        let (s1, s2) = smallest_side((l, w, h));
-
-        sum += 2 * l * w + 2 * w * h + 2 * h * l + s1 * s2;
-    }
-
-    sum
+pub fn part1(input: &[(Left, Right)]) -> u32 {
+    input.iter().map(|(l, r)| get_score_1(l, r)).sum()
 }
 
 #[aoc(day2, part2)]
-pub fn solve_part2(input: &[Gift]) -> u32 {
-    input
-        .iter()
-        .map(|&(l, w, h)| {
-            let (s1, s2) = smallest_side((l, w, h));
-
-            (s1 + s2) * 2 + l * w * h
-        })
-        .sum()
+pub fn part2(input: &[(Left, Right)]) -> u32 {
+    input.iter().map(|(l, r)| get_score_2(l, r)).sum()
 }
 
-fn smallest_side((l, w, h): Gift) -> (u32, u32) {
-    let mut vec = vec![l, w, h];
-    vec.sort();
-
-    (vec[0], vec[1])
+fn get_score_1(l: &Left, r: &Right) -> u32 {
+    let other_hand = l.to_hand();
+    let my_hand = r.to_hand();
+    my_hand.winning_score(&other_hand) + my_hand.score()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    // A present with dimensions 2x3x4 requires 2*6 + 2*12 + 2*8 = 52 square feet of wrapping paper plus 6 square feet of slack, for a total of 58 square feet.
-    fn example1() {
-        assert_eq!(solve_part1(&input_generator("2x3x4")), 58);
-    }
-
-    #[test]
-    // A present with dimensions 1x1x10 requires 2*1 + 2*10 + 2*10 = 42 square feet of wrapping paper plus 1 square foot of slack, for a total of 43 square feet.
-    fn example2() {
-        assert_eq!(solve_part1(&input_generator("1x1x10")), 43);
-    }
-
-    #[test]
-    // A present with dimensions 2x3x4 requires 2+2+3+3 = 10 feet of ribbon to wrap the present plus 2*3*4 = 24 feet of ribbon for the bow, for a total of 34 feet.
-    fn example3() {
-        assert_eq!(solve_part2(&input_generator("2x3x4")), 34);
-    }
-
-    #[test]
-    // A present with dimensions 1x1x10 requires 1+1+1+1 = 4 feet of ribbon to wrap the present plus 1*1*10 = 10 feet of ribbon for the bow, for a total of 14 feet.
-    fn example4() {
-        assert_eq!(solve_part2(&input_generator("1x1x10")), 14);
-    }
-}*/
+fn get_score_2(l: &Left, r: &Right) -> u32 {
+    let other_hand = l.to_hand();
+    let my_hand = r.to_desired_hand(&other_hand);
+    my_hand.winning_score(&other_hand) + my_hand.score()
+}
