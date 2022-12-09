@@ -57,12 +57,10 @@ pub fn input_generator(input: &str) -> Vec<(Dir, usize)> {
 
 fn follow_head(knots: &mut [(Num, Num)]) {
     for i in 1..knots.len() {
-        let (hx, hy) = knots[i - 1];
-        let (x, y) = &mut knots[i];
-
+        let (hx, hy) = &knots[i - 1];
+        let (x, y) = &knots[i];
         if hx.abs_diff(*x) > 1 || hy.abs_diff(*y) > 1 {
-            *x += (hx - *x).clamp(-1, 1);
-            *y += (hy - *y).clamp(-1, 1);
+            knots[i] = (x + (hx - x).signum(), y + (hy - y).signum());
         } else {
             break;
         }
@@ -70,14 +68,15 @@ fn follow_head(knots: &mut [(Num, Num)]) {
 }
 
 fn simulate_rope<const KNOTS: usize>(moves: &[(Dir, usize)]) -> usize {
+    assert!(KNOTS > 0);
     let mut knots = [(0, 0); KNOTS];
     let mut all_tail_pos = HashSet::new();
-    all_tail_pos.insert(*knots.last().unwrap());
+    all_tail_pos.insert(knots[KNOTS - 1]);
     for (dir, amount) in moves {
         for _ in 0..*amount {
             knots[0] = dir.move_vec(knots[0]);
             follow_head(&mut knots);
-            all_tail_pos.insert(*knots.last().unwrap());
+            all_tail_pos.insert(knots[KNOTS - 1]);
         }
     }
 
