@@ -1,7 +1,7 @@
-use std::collections::HashSet;
 use std::str::FromStr;
 
 use aoc_runner_derive::{aoc, aoc_generator};
+use rustc_hash::FxHashSet;
 
 type Num = i32;
 
@@ -23,7 +23,7 @@ impl Dir {
         }
     }
 
-    fn move_vec(&self, (x, y): (Num, Num)) -> (Num, Num) {
+    fn move_vec(&self, (x, y): &(Num, Num)) -> (Num, Num) {
         let (dx, dy) = self.get_vector();
         (x + dx, y + dy)
     }
@@ -68,13 +68,13 @@ fn follow_head(knots: &mut [(Num, Num)]) {
 }
 
 fn simulate_rope<const KNOTS: usize>(moves: &[(Dir, usize)]) -> usize {
-    assert!(KNOTS > 0);
+    assert!(KNOTS >= 1);
     let mut knots = [(0, 0); KNOTS];
-    let mut all_tail_pos = HashSet::new();
+    let mut all_tail_pos = FxHashSet::default();
     all_tail_pos.insert(knots[KNOTS - 1]);
     for (dir, amount) in moves {
         for _ in 0..*amount {
-            knots[0] = dir.move_vec(knots[0]);
+            knots[0] = dir.move_vec(&knots[0]);
             follow_head(&mut knots);
             all_tail_pos.insert(knots[KNOTS - 1]);
         }
