@@ -35,8 +35,8 @@ impl FromStr for Instruction {
 
 #[derive(Debug, Clone)]
 pub struct Cpu {
-    register_x: i32,
-    cycle: u32,
+    pub register_x: i32,
+    pub cycle: u32,
     pc: u32,
     cycles_with_current_instruction: u32,
     instructions: Vec<Instruction>,
@@ -74,14 +74,6 @@ impl Cpu {
     pub fn signal_strength(&self) -> i32 {
         self.cycle as i32 * self.register_x
     }
-
-    pub fn cycle(&self) -> u32 {
-        self.cycle
-    }
-
-    pub fn register_x(&self) -> i32 {
-        self.register_x
-    }
 }
 
 #[aoc_generator(day10)]
@@ -99,7 +91,7 @@ pub fn part1(cpu: &Cpu) -> i32 {
     let mut sum: i32 = 0;
     while cpu.has_instruction() {
         cpu.pre_cycle();
-        if (20..=220).contains(&cpu.cycle()) && (cpu.cycle() - 20) % 40 == 0 {
+        if (20..=220).contains(&cpu.cycle) && (cpu.cycle - 20) % 40 == 0 {
             sum += cpu.signal_strength();
         }
 
@@ -111,17 +103,12 @@ pub fn part1(cpu: &Cpu) -> i32 {
 
 #[aoc(day10, part2)]
 pub fn part2(cpu: &Cpu) -> String {
-    let width = 40;
-    let height = 6;
-    let mut display = String::with_capacity(width * height + height + 1);
-    display.push('\n');
-
     let mut cpu = cpu.clone();
+    let mut display = '\n'.to_string();
     while cpu.has_instruction() {
         cpu.pre_cycle();
-        let pixel = (cpu.cycle() as i32 - 1) % 40;
-        let x = cpu.register_x();
-        display.push(if (x - 1..=x + 1).contains(&pixel) { '#' } else { '.' });
+        let pixel = (cpu.cycle as i32 - 1) % 40;
+        display.push(if cpu.register_x.abs_diff(pixel) <= 1 { '\u{2588}' } else { ' ' });
         if pixel == 39 {
             display.push('\n');
         }
