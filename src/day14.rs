@@ -1,12 +1,12 @@
 use std::str::FromStr;
 
 use aoc_runner_derive::{aoc, aoc_generator};
+use rustc_hash::FxHashSet;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Obstacle {
     LineX { y: u32, x_start: u32, x_end: u32 },
     LineY { x: u32, y_start: u32, y_end: u32 },
-    Sand(Pos),
 }
 
 impl Obstacle {
@@ -14,15 +14,13 @@ impl Obstacle {
         match self {
             Obstacle::LineX { y, x_start, x_end } => { y == &pos.y && (x_start..=x_end).contains(&&pos.x) }
             Obstacle::LineY { x, y_start, y_end } => { x == &pos.x && (y_start..=y_end).contains(&&pos.y) }
-            Obstacle::Sand(p) => p == pos
         }
     }
 
     pub fn max_y(&self) -> u32 {
         match self {
             Obstacle::LineX { y, .. } => *y,
-            Obstacle::LineY { y_end, .. } => *y_end,
-            Obstacle::Sand(Pos { y, .. }) => *y
+            Obstacle::LineY { y_end, .. } => *y_end
         }
     }
 }
@@ -77,32 +75,30 @@ const SPAWN_POINT: Pos = Pos { x: 500, y: 0 };
 
 #[aoc(day14 part1)]
 pub fn part1(obstacles: &[Obstacle]) -> usize {
-    let mut obstacles = obstacles.to_vec();
     let max_y = obstacles.iter().map(|o| o.max_y()).max().unwrap();
+    let mut all_sand = FxHashSet::default();
 
     let mut count = 0;
+    let mut path = vec![];
     'outer: loop {
-        let mut sand = SPAWN_POINT;
-        if obstacles.iter().any(|o| o.contains(&sand)) {
-            panic!();
-        }
-
+        let mut sand = path.pop().unwrap_or(SPAWN_POINT);
         'inner: loop {
-            for next_pos in [Pos { x: sand.x, y: sand.y + 1 }, Pos { x: sand.x - 1, y: sand.y + 1 }, Pos { x: sand.x + 1, y: sand.y + 1 }] {
-                if obstacles.iter().any(|o| o.contains(&next_pos)) {
+            if sand.y > max_y {
+                break 'outer;
+            }
+
+            for next_pos in &[Pos { x: sand.x, y: sand.y + 1 }, Pos { x: sand.x - 1, y: sand.y + 1 }, Pos { x: sand.x + 1, y: sand.y + 1 }] {
+                if all_sand.contains(next_pos) || obstacles.iter().any(|o| o.contains(next_pos)) {
                     continue;
                 }
 
-                if sand.y > max_y {
-                    break 'outer;
-                }
-
-                sand = next_pos;
+                path.push(sand);
+                sand = *next_pos;
                 continue 'inner;
             }
 
             count += 1;
-            obstacles.push(Obstacle::Sand(sand));
+            all_sand.insert(sand);
             continue 'outer;
         }
     }
@@ -112,28 +108,32 @@ pub fn part1(obstacles: &[Obstacle]) -> usize {
 
 #[aoc(day14, part2)]
 pub fn part2(obstacles: &[Obstacle]) -> usize {
-    let mut obstacles = obstacles.to_vec();
     let floor = 2 + obstacles.iter().map(|o| o.max_y()).max().unwrap();
+    let mut all_sand = FxHashSet::default();
 
     let mut count = 0;
+    let mut path = vec![];
     'outer: loop {
-        let mut sand = SPAWN_POINT;
-        if obstacles.iter().any(|o| o.contains(&sand)) {
+        let mut sand = path.pop().unwrap_or(SPAWN_POINT);
+        if all_sand.contains(&sand) || obstacles.iter().any(|o| o.contains(&sand)) {
             break 'outer;
         }
 
         'inner: loop {
-            for next_pos in [Pos { x: sand.x, y: sand.y + 1 }, Pos { x: sand.x - 1, y: sand.y + 1 }, Pos { x: sand.x + 1, y: sand.y + 1 }] {
-                if next_pos.y >= floor || obstacles.iter().any(|o| o.contains(&next_pos)) {
-                    continue;
-                }
+            if sand.y + 1 < floor {
+                for next_pos in &[Pos { x: sand.x, y: sand.y + 1 }, Pos { x: sand.x - 1, y: sand.y + 1 }, Pos { x: sand.x + 1, y: sand.y + 1 }] {
+                    if all_sand.contains(next_pos) || obstacles.iter().any(|o| o.contains(next_pos)) {
+                        continue;
+                    }
 
-                sand = next_pos;
-                continue 'inner;
+                    path.push(sand);
+                    sand = *next_pos;
+                    continue 'inner;
+                }
             }
 
             count += 1;
-            obstacles.push(Obstacle::Sand(sand));
+            all_sand.insert(sand);
             continue 'outer;
         }
     }
