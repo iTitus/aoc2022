@@ -1,5 +1,3 @@
-extern crate core;
-
 use aoc_runner_derive::aoc_lib;
 
 mod day01;
@@ -18,5 +16,6 @@ mod day13;
 mod day14;
 mod day15;
 mod day16;
+mod day17;
 
 aoc_lib! { year = 2022 }
