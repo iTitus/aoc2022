@@ -201,7 +201,7 @@ pub fn part2(valves: &[Valve]) -> u32 {
                 let d1 = valves[state.pos1].connections[&n];
                 let d2 = valves[state.pos2].connections[&n];
                 idx += 1;
-                gain(if idx < state.time_left1 { state.time_left1 - (idx - 1) } else { 0 }, d1, v.flow).max(gain(if idx < state.time_left2 { state.time_left2 - (idx - 1) } else { 0 }, d2, v.flow))
+                gain(if idx <= state.time_left1 { state.time_left1 - (idx - 1) } else { 0 }, d1, v.flow).max(gain(if idx <= state.time_left2 { state.time_left2 - (idx - 1) } else { 0 }, d2, v.flow))
             })
             .sum();
         if state.total_pressure + max_pressure_to_get <= max {
