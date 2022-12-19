@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use lazy_static::lazy_static;
+use num::Integer;
 use regex::Regex;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
@@ -65,6 +66,26 @@ impl State {
     }
 
     fn add_successors(&self, blueprint: &Blueprint, q: &mut Vec<State>) {
+        if self.time_left == 0 {
+            return;
+        }
+
+        fn div_ceil<T: Integer>(a: T, b: T) -> T {
+            if a.is_zero() {
+                T::zero()
+            } else {
+                a.div_ceil(&b)
+            }
+        }
+
+        if (self.obsidian_count >= blueprint.geode_robot_obsidian_cost || self.obsidian_robot_count > 0)
+            && (self.ore_count >= blueprint.geode_robot_ore_cost || self.ore_robot_count > 0) {
+            let wait_time = div_ceil(blueprint.geode_robot_obsidian_cost - self.obsidian_count, self.obsidian_robot_count)
+                .max(div_ceil(blueprint.geode_robot_ore_cost - self.ore_count, self.ore_robot_count));
+            if wait_time < (self.time_left as u32) {
+
+            }
+        }
         if self.time_left > 0 {
             let ore_count = self.ore_count;
             let clay_count = self.clay_count;
