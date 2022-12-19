@@ -1,20 +1,18 @@
-use std::collections::VecDeque;
 use std::str::FromStr;
 
 use aoc_runner_derive::{aoc, aoc_generator};
 use lazy_static::lazy_static;
 use regex::Regex;
-use rustc_hash::FxHashSet;
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 pub struct Blueprint {
     index: u8,
-    ore_robot_ore_cost: u8,
-    clay_robot_ore_cost: u8,
-    obsidian_robot_ore_cost: u8,
-    obsidian_robot_clay_cost: u8,
-    geode_robot_ore_cost: u8,
-    geode_robot_obsidian_cost: u8,
+    ore_robot_ore_cost: u32,
+    clay_robot_ore_cost: u32,
+    obsidian_robot_ore_cost: u32,
+    obsidian_robot_clay_cost: u32,
+    geode_robot_ore_cost: u32,
+    geode_robot_obsidian_cost: u32,
 }
 
 impl FromStr for Blueprint {
@@ -41,14 +39,14 @@ impl FromStr for Blueprint {
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
 struct State {
     time_left: u8,
-    ore_robot_count: u8,
-    clay_robot_count: u8,
-    obsidian_robot_count: u8,
-    geode_robot_count: u8,
-    ore_count: u8,
-    clay_count: u8,
-    obsidian_count: u8,
-    geode_count: u8,
+    ore_robot_count: u32,
+    clay_robot_count: u32,
+    obsidian_robot_count: u32,
+    geode_robot_count: u32,
+    ore_count: u32,
+    clay_count: u32,
+    obsidian_count: u32,
+    geode_count: u32,
 }
 
 impl State {
@@ -66,63 +64,70 @@ impl State {
         }
     }
 
-    fn add_successors(&self, blueprint: &Blueprint, q: &mut VecDeque<State>) {
+    fn add_successors(&self, blueprint: &Blueprint, q: &mut Vec<State>) {
         if self.time_left > 0 {
             let ore_count = self.ore_count;
             let clay_count = self.clay_count;
             let obsidian_count = self.obsidian_count;
 
-            for geode_robot_production in 0..=self.ore_count {
-                if ore_count < geode_robot_production * blueprint.geode_robot_ore_cost || obsidian_count < geode_robot_production * blueprint.geode_robot_obsidian_cost {
-                    break;
+            let _amounts = [0, 1];
+            let _amounts_rev = [1, 0];
+
+            //for geode_robot_production in &amounts_rev {
+            /*if ore_count < geode_robot_production * blueprint.geode_robot_ore_cost || obsidian_count < geode_robot_production * blueprint.geode_robot_obsidian_cost {
+                continue;
+            }*/
+            // always try to build a geode robot if possible
+            let geode_robot_production = u32::from(obsidian_count >= blueprint.geode_robot_obsidian_cost && ore_count >= blueprint.geode_robot_ore_cost);
+
+            let ore_count = ore_count - geode_robot_production * blueprint.geode_robot_ore_cost;
+            let obsidian_count = obsidian_count - geode_robot_production * blueprint.geode_robot_obsidian_cost;
+            for obsidian_robot_production in &_amounts {
+                if clay_count < obsidian_robot_production * blueprint.obsidian_robot_clay_cost || ore_count < obsidian_robot_production * blueprint.obsidian_robot_ore_cost {
+                    continue;
                 }
 
-                let ore_count = ore_count - geode_robot_production * blueprint.geode_robot_ore_cost;
-                let obsidian_count = obsidian_count - geode_robot_production * blueprint.geode_robot_obsidian_cost;
-                for obsidian_robot_production in 0..=self.ore_count {
-                    if ore_count < obsidian_robot_production * blueprint.obsidian_robot_ore_cost || clay_count < obsidian_robot_production * blueprint.obsidian_robot_clay_cost {
-                        break;
+                let ore_count = ore_count - obsidian_robot_production * blueprint.obsidian_robot_ore_cost;
+                let clay_count = clay_count - obsidian_robot_production * blueprint.obsidian_robot_clay_cost;
+                for clay_robot_production in &_amounts {
+                    if ore_count < clay_robot_production * blueprint.clay_robot_ore_cost {
+                        continue;
                     }
 
-                    let ore_count = ore_count - obsidian_robot_production * blueprint.obsidian_robot_ore_cost;
-                    let clay_count = clay_count - obsidian_robot_production * blueprint.obsidian_robot_clay_cost;
-                    for clay_robot_production in 0..=self.ore_count {
-                        if ore_count < clay_robot_production * blueprint.clay_robot_ore_cost {
-                            break;
+                    let ore_count = ore_count - clay_robot_production * blueprint.clay_robot_ore_cost;
+                    for ore_robot_production in &_amounts {
+                        if ore_count < ore_robot_production * blueprint.ore_robot_ore_cost {
+                            continue;
                         }
 
-                        let ore_count = ore_count - clay_robot_production * blueprint.clay_robot_ore_cost;
-                        for ore_robot_production in 0..=self.ore_count {
-                            if ore_count < ore_robot_production * blueprint.ore_robot_ore_cost {
-                                break;
-                            }
-
-                            let ore_count = ore_count - ore_robot_production * blueprint.ore_robot_ore_cost;
-                            let mut s = *self;
-                            s.time_left -= 1;
-                            s.ore_robot_count += ore_robot_production;
-                            s.clay_robot_count += clay_robot_production;
-                            s.obsidian_robot_count += obsidian_robot_production;
-                            s.geode_robot_count += geode_robot_production;
-                            s.ore_count = ore_count + self.ore_robot_count;
-                            s.clay_count = clay_count + self.clay_robot_count;
-                            s.obsidian_count = obsidian_count + self.obsidian_robot_count;
-                            s.geode_count += self.geode_robot_count;
-                            println!("  succ: {s:?}");
-                            q.push_back(s);
-                        }
+                        let ore_count = ore_count - ore_robot_production * blueprint.ore_robot_ore_cost;
+                        let mut s = *self;
+                        s.time_left -= 1;
+                        s.ore_robot_count += ore_robot_production;
+                        s.clay_robot_count += clay_robot_production;
+                        s.obsidian_robot_count += obsidian_robot_production;
+                        s.geode_robot_count += geode_robot_production;
+                        s.ore_count = ore_count + self.ore_robot_count;
+                        s.clay_count = clay_count + self.clay_robot_count;
+                        s.obsidian_count = obsidian_count + self.obsidian_robot_count;
+                        s.geode_count += self.geode_robot_count;
+                        // println!("  succ: {s:?}");
+                        q.push(s);
                     }
                 }
             }
+            //}
         }
     }
 
     fn max_geode_count_heuristic(&self) -> u32 {
+        let production = self.geode_count + self.geode_robot_count * (self.time_left as u32);
         if self.time_left == 0 {
-            self.geode_count as u32
+            production
         } else {
-            (self.geode_count as u32) + (self.geode_robot_count as u32 * self.time_left as u32) + {
-                let time_left_m1 = (self.time_left as u32) - 1;
+            let time_left = self.time_left as u32;
+            production + {
+                let time_left_m1 = time_left - 1;
                 (time_left_m1 * time_left_m1 + time_left_m1) / 2
             }
         }
@@ -142,21 +147,24 @@ pub fn input_generator(input: &str) -> Vec<Blueprint> {
 pub fn part1(input: &[Blueprint]) -> u32 {
     input.iter()
         .map(|blueprint| {
-            let mut max_geode_count = 0;
-            let mut visited = FxHashSet::default();
-            let mut q = VecDeque::new();
-            q.push_back(State::initial(24));
-            while let Some(s) = q.pop_front() {
-                if !visited.insert(s) {
-                    continue;
-                }
+            println!("### BP {} ###", blueprint.index);
 
-                println!("{s:?}");
+            let mut max_geode_count = 0;
+            // let mut visited = FxHashSet::default();
+            let mut q = vec![];
+            q.push(State::initial(23));
+            while let Some(s) = q.pop() {
+                /*if !visited.insert(s) {
+                    continue;
+                }*/
+
+                // println!("{s:?}");
                 if (s.geode_count as u32) > max_geode_count {
+                    println!("new max geode count: {s:?}");
                     max_geode_count = s.geode_count as u32;
                 }
 
-                if s.max_geode_count_heuristic() < max_geode_count {
+                if s.max_geode_count_heuristic() <= max_geode_count {
                     continue;
                 }
 
