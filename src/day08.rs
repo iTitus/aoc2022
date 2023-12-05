@@ -15,7 +15,11 @@ impl GridForest {
             panic!("width mismatch");
         }
 
-        GridForest { trees, width, height }
+        GridForest {
+            trees,
+            width,
+            height,
+        }
     }
 
     fn get_raw(&self, x: usize, y: usize) -> u8 {
@@ -37,7 +41,10 @@ impl GridForest {
             return true;
         }
 
-        if (x + 1..self.width).map(|x| self.get_raw(x, y)).all(|t| t < tree) {
+        if (x + 1..self.width)
+            .map(|x| self.get_raw(x, y))
+            .all(|t| t < tree)
+        {
             return true;
         }
 
@@ -45,7 +52,10 @@ impl GridForest {
             return true;
         }
 
-        if (y + 1..self.height).map(|y| self.get_raw(x, y)).all(|t| t < tree) {
+        if (y + 1..self.height)
+            .map(|y| self.get_raw(x, y))
+            .all(|t| t < tree)
+        {
             return true;
         }
 
@@ -61,26 +71,30 @@ impl GridForest {
                 .rev()
                 .map(|x| self.get_raw(x, y))
                 .take_while(|t| *t < tree)
-                .count() + 1
+                .count()
+                + 1,
         );
         score *= (self.width - x - 1).min(
             (x + 1..self.width)
                 .map(|x| self.get_raw(x, y))
                 .take_while(|t| *t < tree)
-                .count() + 1
+                .count()
+                + 1,
         );
         score *= y.min(
             (0..y)
                 .rev()
                 .map(|y| self.get_raw(x, y))
                 .take_while(|t| *t < tree)
-                .count() + 1
+                .count()
+                + 1,
         );
         score *= (self.height - y - 1).min(
             (y + 1..self.height)
                 .map(|y| self.get_raw(x, y))
                 .take_while(|t| *t < tree)
-                .count() + 1
+                .count()
+                + 1,
         );
 
         score
@@ -89,7 +103,8 @@ impl GridForest {
 
 #[aoc_generator(day8)]
 pub fn input_generator(input: &str) -> GridForest {
-    let trees: Vec<Vec<u8>> = input.lines()
+    let trees: Vec<Vec<u8>> = input
+        .lines()
         .map(|l| l.trim())
         .filter(|l| !l.is_empty())
         .map(|l| l.bytes().map(|b| b - b'0').collect())
@@ -115,7 +130,8 @@ pub fn part2(forest: &GridForest) -> usize {
     (0..forest.width)
         .flat_map(|x| (0..forest.height).map(move |y| (x, y)))
         .map(|(x, y)| forest.scenic_score(x, y))
-        .max().unwrap()
+        .max()
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -126,25 +142,29 @@ mod tests {
 
     #[test]
     fn test_part2_1() {
-        let forest = input_generator(r"
+        let forest = input_generator(
+            r"
 30373
 25512
 65332
 33549
 35390
-");
+",
+        );
         assert_eq!(forest.scenic_score(2, 1), 4);
     }
 
     #[test]
     fn test_part2_2() {
-        let forest = input_generator(r"
+        let forest = input_generator(
+            r"
 30373
 25512
 65332
 33549
 35390
-");
+",
+        );
         assert_eq!(forest.scenic_score(2, 3), 8);
     }
 }

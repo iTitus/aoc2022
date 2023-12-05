@@ -2,7 +2,8 @@ use aoc_runner_derive::{aoc, aoc_generator};
 
 #[aoc_generator(day25)]
 pub fn input_generator(input: &str) -> Vec<String> {
-    input.lines()
+    input
+        .lines()
         .map(str::trim)
         .filter(|l| !l.is_empty())
         .map(str::to_string)
@@ -17,7 +18,7 @@ fn from_snafu(s: &str) -> i64 {
             '0' => 0,
             '-' => -1,
             '=' => -2,
-            _ => panic!()
+            _ => panic!(),
         }
     }
 
@@ -38,7 +39,7 @@ fn to_snafu(mut n: i64) -> String {
             2 => '0',
             3 => '1',
             4 => '2',
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
@@ -60,11 +61,7 @@ fn to_snafu(mut n: i64) -> String {
 
 #[aoc(day25, part1)]
 pub fn part1(input: &[String]) -> String {
-    to_snafu(
-        input.iter()
-            .map(|s| from_snafu(s))
-            .sum()
-    )
+    to_snafu(input.iter().map(|s| from_snafu(s)).sum())
 }
 
 #[cfg(test)]

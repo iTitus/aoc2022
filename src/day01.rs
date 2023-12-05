@@ -21,7 +21,8 @@ pub fn input_generator(input: &str) -> Vec<Vec<Num>> {
 
                 result
             }
-        }).collect_vec();
+        })
+        .collect_vec();
 
     let mut calories_grouped = vec![];
     let mut current_group = vec![];
@@ -43,7 +44,8 @@ pub fn input_generator(input: &str) -> Vec<Vec<Num>> {
 
 #[aoc(day1, part1)]
 pub fn part1(input: &[Vec<Num>]) -> Num {
-    input.iter()
+    input
+        .iter()
         .map(|calories| calories.iter().sum())
         .max()
         .unwrap()
@@ -51,7 +53,8 @@ pub fn part1(input: &[Vec<Num>]) -> Num {
 
 #[aoc(day1, part2)]
 pub fn part2(input: &[Vec<Num>]) -> Num {
-    input.iter()
+    input
+        .iter()
         .map(|calories| calories.iter().sum())
         .sorted_unstable_by_key(|c: &Num| Reverse(*c))
         .take(3)

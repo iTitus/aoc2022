@@ -44,7 +44,13 @@ pub struct Cpu {
 
 impl Cpu {
     pub fn new(instructions: Vec<Instruction>) -> Cpu {
-        Cpu { register_x: 1, cycle: 0, pc: 0, cycles_with_current_instruction: 0, instructions }
+        Cpu {
+            register_x: 1,
+            cycle: 0,
+            pc: 0,
+            cycles_with_current_instruction: 0,
+            instructions,
+        }
     }
 
     pub fn has_instruction(&self) -> bool {
@@ -78,11 +84,14 @@ impl Cpu {
 
 #[aoc_generator(day10)]
 pub fn input_generator(input: &str) -> Cpu {
-    Cpu::new(input.lines()
-        .map(|l| l.trim())
-        .filter(|l| !l.is_empty())
-        .map(|l| l.parse().unwrap())
-        .collect())
+    Cpu::new(
+        input
+            .lines()
+            .map(|l| l.trim())
+            .filter(|l| !l.is_empty())
+            .map(|l| l.parse().unwrap())
+            .collect(),
+    )
 }
 
 #[aoc(day10, part1)]
@@ -108,7 +117,11 @@ pub fn part2(cpu: &Cpu) -> String {
     while cpu.has_instruction() {
         cpu.pre_cycle();
         let pixel = (cpu.cycle as i32 - 1) % 40;
-        display.push(if cpu.register_x.abs_diff(pixel) <= 1 { '\u{2588}' } else { ' ' });
+        display.push(if cpu.register_x.abs_diff(pixel) <= 1 {
+            '\u{2588}'
+        } else {
+            ' '
+        });
         if pixel == 39 {
             display.push('\n');
         }

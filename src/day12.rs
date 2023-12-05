@@ -26,7 +26,13 @@ impl Grid {
         let (end, _) = trees.iter().find_position(|&&n| n == b'E').unwrap();
         trees[end] = b'z';
 
-        Grid { grid: trees, width, height, start, end }
+        Grid {
+            grid: trees,
+            width,
+            height,
+            start,
+            end,
+        }
     }
 
     fn to_idx(&self, x: usize, y: usize) -> usize {
@@ -75,14 +81,13 @@ impl Grid {
             }
 
             let from_dist = dist[n];
-            neighbors.into_iter()
-                .for_each(|to| {
-                    let new_dist = from_dist + 1;
-                    if new_dist < dist[to] {
-                        dist[to] = new_dist;
-                        q.push_back(to);
-                    }
-                });
+            neighbors.into_iter().for_each(|to| {
+                let new_dist = from_dist + 1;
+                if new_dist < dist[to] {
+                    dist[to] = new_dist;
+                    q.push_back(to);
+                }
+            });
         }
 
         dist
@@ -109,9 +114,7 @@ impl Grid {
 pub fn input_generator(input: &str) -> Grid {
     let input = input.trim();
     let (width, _) = input.bytes().find_position(|&c| c == b'\n').unwrap();
-    let grid: Vec<u8> = input.lines()
-        .flat_map(str::bytes)
-        .collect();
+    let grid: Vec<u8> = input.lines().flat_map(str::bytes).collect();
 
     Grid::new(grid, width)
 }
@@ -125,9 +128,11 @@ pub fn part1(grid: &Grid) -> usize {
 #[aoc(day12, part2)]
 pub fn part2(grid: &Grid) -> usize {
     let result = grid.bfs_reverse();
-    let (_, dist) = result.into_iter()
+    let (_, dist) = result
+        .into_iter()
         .enumerate()
         .filter(|&(i, _)| grid.grid[i] == b'a')
-        .min_by_key(|&(_, dist)| dist).unwrap();
+        .min_by_key(|&(_, dist)| dist)
+        .unwrap();
     dist
 }

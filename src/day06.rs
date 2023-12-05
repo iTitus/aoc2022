@@ -3,7 +3,9 @@ use itertools::Itertools;
 
 fn find_first_distinct(input: &str, n: usize) -> usize {
     // once again we assume that the input is only ascii
-    input.trim().as_bytes()
+    input
+        .trim()
+        .as_bytes()
         .windows(n)
         .position(|window| window.iter().all_unique())
         .map(|i| i + n)

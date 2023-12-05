@@ -21,14 +21,14 @@ impl Hand {
 
     pub fn winning_score(&self, other: &Hand) -> u32 {
         match (self, other) {
-            (a, b)  if a == b => 3,
+            (a, b) if a == b => 3,
             (Hand::Rock, Hand::Paper) => 0,
             (Hand::Rock, Hand::Scissors) => 6,
             (Hand::Paper, Hand::Rock) => 6,
             (Hand::Paper, Hand::Scissors) => 0,
             (Hand::Scissors, Hand::Rock) => 0,
             (Hand::Scissors, Hand::Paper) => 6,
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 }
@@ -57,7 +57,7 @@ impl FromStr for Left {
             "A" => Ok(Left::A),
             "B" => Ok(Left::B),
             "C" => Ok(Left::C),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }
@@ -98,7 +98,7 @@ impl FromStr for Right {
             "X" => Ok(Right::X),
             "Y" => Ok(Right::Y),
             "Z" => Ok(Right::Z),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }
@@ -109,7 +109,10 @@ pub fn input_generator(input: &str) -> Vec<(Left, Right)> {
         .lines()
         .map(|l| {
             let v = l.trim().splitn(2, ' ').collect_vec();
-            (Left::from_str(v[0]).unwrap(), Right::from_str(v[1]).unwrap())
+            (
+                Left::from_str(v[0]).unwrap(),
+                Right::from_str(v[1]).unwrap(),
+            )
         })
         .collect()
 }

@@ -3,7 +3,8 @@ use itertools::Itertools;
 
 #[aoc_generator(day20)]
 pub fn input_generator(input: &str) -> Vec<isize> {
-    input.lines()
+    input
+        .lines()
         .map(str::trim)
         .filter(|l| !l.is_empty())
         .map(|l| l.parse().unwrap())
@@ -43,7 +44,6 @@ pub fn part2(input: &[isize]) -> isize {
     mix(input, 811589153, 10)
 }
 
-
 #[cfg(test)]
 mod tests {
     use pretty_assertions::assert_eq;
@@ -52,27 +52,31 @@ mod tests {
 
     #[test]
     fn test_1() {
-        let input = input_generator(r"1
+        let input = input_generator(
+            r"1
 2
 -3
 3
 -2
 0
 4
-");
+",
+        );
         assert_eq!(3, part1(&input))
     }
 
     #[test]
     fn test_2() {
-        let input = input_generator(r"1
+        let input = input_generator(
+            r"1
 2
 -3
 3
 -2
 0
 4
-");
+",
+        );
         assert_eq!(1623178306, part2(&input))
     }
 }

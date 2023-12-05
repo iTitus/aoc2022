@@ -46,7 +46,8 @@ pub struct Valley {
 
 impl Valley {
     pub fn get_blizzard_state(&self, steps: i32) -> FxHashSet<Pos> {
-        self.blizzards.iter()
+        self.blizzards
+            .iter()
             .map(|b| {
                 let mut pos = b.pos + steps * b.dir.vec();
                 pos.x = (pos.x - 1).rem_euclid(self.size_x - 2) + 1;
@@ -61,7 +62,8 @@ impl Valley {
 pub fn input_generator(input: &str) -> Valley {
     let mut size_x = 0;
     let mut size_y = 0;
-    let blizzards = input.lines()
+    let blizzards = input
+        .lines()
         .map(str::trim)
         .filter(|l| !l.is_empty())
         .enumerate()
@@ -77,7 +79,7 @@ pub fn input_generator(input: &str) -> Valley {
                         '>' => Dir::East,
                         'v' => Dir::South,
                         '<' => Dir::West,
-                        _ => unreachable!()
+                        _ => unreachable!(),
                     };
                     Blizzard {
                         dir,
@@ -105,14 +107,22 @@ fn do_pathfinding(valley: &Valley, start_minutes: i32, start_pos: Pos, end_pos: 
                     let pos: Pos = pos + dir;
                     pos
                 })
-                .filter(|&pos| pos == end_pos || pos == start_pos || (pos.x >= 1 && pos.x <= valley.size_x - 2 && pos.y >= 1 && pos.y <= valley.size_y - 2))
+                .filter(|&pos| {
+                    pos == end_pos
+                        || pos == start_pos
+                        || (pos.x >= 1
+                            && pos.x <= valley.size_x - 2
+                            && pos.y >= 1
+                            && pos.y <= valley.size_y - 2)
+                })
                 .filter(|pos| !blizzards.contains(pos))
                 .map(|pos| ((i + 1, pos), 1))
                 .collect_vec()
         },
         |&(_, pos)| (end_pos - pos).abs().sum(),
         |&(_, pos)| pos == end_pos,
-    ).unwrap();
+    )
+    .unwrap();
     path.last().unwrap().0
 }
 
@@ -140,25 +150,29 @@ mod tests {
 
     #[test]
     fn test_1() {
-        let input = input_generator(r"#.######
+        let input = input_generator(
+            r"#.######
 #>>.<^<#
 #.<..<<#
 #>v.><>#
 #<^v^^>#
 ######.#
-");
+",
+        );
         assert_eq!(18, part1(&input))
     }
 
     #[test]
     fn test_2() {
-        let input = input_generator(r"#.######
+        let input = input_generator(
+            r"#.######
 #>>.<^<#
 #.<..<<#
 #>v.><>#
 #<^v^^>#
 ######.#
-");
+",
+        );
         assert_eq!(54, part2(&input))
     }
 }

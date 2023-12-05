@@ -30,15 +30,16 @@ impl FromStr for Packet {
                         None => return it.next().map_or_else(|| Ok(tos), |_| Err(())),
                     }
                 }
-                '0'..='9' => {
-                    stack.last_mut().ok_or(())?.push(Packet::Int(
-                        it.peeking_take_while(|c| ('0'..='9').contains(c))
-                            .collect::<String>()
-                            .parse().map_err(|_| ())?
-                    ))
+                '0'..='9' => stack.last_mut().ok_or(())?.push(Packet::Int(
+                    it.peeking_take_while(|c| ('0'..='9').contains(c))
+                        .collect::<String>()
+                        .parse()
+                        .map_err(|_| ())?,
+                )),
+                ',' | ' ' => {
+                    it.next();
                 }
-                ',' | ' ' => { it.next(); }
-                _ => break
+                _ => break,
             }
         }
 
@@ -77,7 +78,8 @@ impl Ord for Packet {
 
 #[aoc_generator(day13)]
 pub fn input_generator(input: &str) -> Vec<Packet> {
-    input.lines()
+    input
+        .lines()
         .map(str::trim)
         .filter(|l| !l.is_empty())
         .map(|l| l.parse().unwrap())
@@ -86,7 +88,8 @@ pub fn input_generator(input: &str) -> Vec<Packet> {
 
 #[aoc(day13 part1)]
 pub fn part1(packets: &[Packet]) -> usize {
-    packets.chunks_exact(2)
+    packets
+        .chunks_exact(2)
         .enumerate()
         .filter(|(_, chunk)| chunk[0] < chunk[1])
         .map(|(n, _)| n + 1)

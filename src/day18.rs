@@ -6,36 +6,12 @@ use itertools::Itertools;
 use rustc_hash::FxHashSet;
 
 const NEIGHBORS: [Cube; 6] = [
-    Cube {
-        x: 1,
-        y: 0,
-        z: 0,
-    },
-    Cube {
-        x: -1,
-        y: 0,
-        z: 0,
-    },
-    Cube {
-        x: 0,
-        y: 1,
-        z: 0,
-    },
-    Cube {
-        x: 0,
-        y: -1,
-        z: 0,
-    },
-    Cube {
-        x: 0,
-        y: 0,
-        z: 1,
-    },
-    Cube {
-        x: 0,
-        y: 0,
-        z: -1,
-    },
+    Cube { x: 1, y: 0, z: 0 },
+    Cube { x: -1, y: 0, z: 0 },
+    Cube { x: 0, y: 1, z: 0 },
+    Cube { x: 0, y: -1, z: 0 },
+    Cube { x: 0, y: 0, z: 1 },
+    Cube { x: 0, y: 0, z: -1 },
 ];
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
@@ -46,9 +22,12 @@ pub struct Cube {
 }
 
 impl Cube {
-    pub fn neighbors(&self) -> impl Iterator<Item=Cube> + '_ {
-        NEIGHBORS.iter()
-            .map(|d| Cube { x: self.x + d.x, y: self.y + d.y, z: self.z + d.z })
+    pub fn neighbors(&self) -> impl Iterator<Item = Cube> + '_ {
+        NEIGHBORS.iter().map(|d| Cube {
+            x: self.x + d.x,
+            y: self.y + d.y,
+            z: self.z + d.z,
+        })
     }
 }
 
@@ -70,7 +49,8 @@ impl FromStr for Cube {
 
 #[aoc_generator(day18)]
 pub fn input_generator(input: &str) -> FxHashSet<Cube> {
-    input.lines()
+    input
+        .lines()
         .map(str::trim)
         .filter(|l| !l.is_empty())
         .map(|l| l.parse().unwrap())
@@ -79,10 +59,9 @@ pub fn input_generator(input: &str) -> FxHashSet<Cube> {
 
 #[aoc(day18 part1)]
 pub fn part1(cubes: &FxHashSet<Cube>) -> usize {
-    cubes.iter()
-        .map(|c| {
-            c.neighbors().filter(|n| !cubes.contains(n)).count()
-        })
+    cubes
+        .iter()
+        .map(|c| c.neighbors().filter(|n| !cubes.contains(n)).count())
         .sum()
 }
 
@@ -97,24 +76,33 @@ pub fn part2(cubes: &FxHashSet<Cube>) -> usize {
 
     let mut outside_air = FxHashSet::default();
     let mut q = VecDeque::new();
-    q.push_back(Cube { x: min_x, y: min_y, z: min_z });
+    q.push_back(Cube {
+        x: min_x,
+        y: min_y,
+        z: min_z,
+    });
     while let Some(c) = q.pop_front() {
         if outside_air.insert(c) {
             q.extend(
                 c.neighbors()
-                    .filter(|n| n.x >= min_x && n.x <= max_x && n.y >= min_y && n.y <= max_y && n.z >= min_z && n.z <= max_z)
-                    .filter(|n| !cubes.contains(n))
+                    .filter(|n| {
+                        n.x >= min_x
+                            && n.x <= max_x
+                            && n.y >= min_y
+                            && n.y <= max_y
+                            && n.z >= min_z
+                            && n.z <= max_z
+                    })
+                    .filter(|n| !cubes.contains(n)),
             )
         }
     }
 
-    cubes.iter()
-        .map(|c| {
-            c.neighbors().filter(|n| outside_air.contains(n)).count()
-        })
+    cubes
+        .iter()
+        .map(|c| c.neighbors().filter(|n| outside_air.contains(n)).count())
         .sum()
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -124,7 +112,8 @@ mod tests {
 
     #[test]
     fn test_1() {
-        let input = input_generator(r"2,2,2
+        let input = input_generator(
+            r"2,2,2
 1,2,2
 3,2,2
 2,1,2
@@ -137,13 +126,15 @@ mod tests {
 3,2,5
 2,1,5
 2,3,5
-");
+",
+        );
         assert_eq!(64, part1(&input))
     }
 
     #[test]
     fn test_2() {
-        let input = input_generator(r"2,2,2
+        let input = input_generator(
+            r"2,2,2
 1,2,2
 3,2,2
 2,1,2
@@ -156,7 +147,8 @@ mod tests {
 3,2,5
 2,1,5
 2,3,5
-");
+",
+        );
         assert_eq!(58, part2(&input))
     }
 }

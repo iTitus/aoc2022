@@ -78,17 +78,29 @@ impl State {
             }
         }
 
-        if (self.obsidian_count >= blueprint.geode_robot_obsidian_cost || self.obsidian_robot_count > 0)
-            && (self.ore_count >= blueprint.geode_robot_ore_cost || self.ore_robot_count > 0) {
-            let wait_time = 1 + calc_wait_time(blueprint.geode_robot_obsidian_cost, self.obsidian_count, self.obsidian_robot_count)
-                .max(calc_wait_time(blueprint.geode_robot_ore_cost, self.ore_count, self.ore_robot_count));
+        if (self.obsidian_count >= blueprint.geode_robot_obsidian_cost
+            || self.obsidian_robot_count > 0)
+            && (self.ore_count >= blueprint.geode_robot_ore_cost || self.ore_robot_count > 0)
+        {
+            let wait_time = 1 + calc_wait_time(
+                blueprint.geode_robot_obsidian_cost,
+                self.obsidian_count,
+                self.obsidian_robot_count,
+            )
+            .max(calc_wait_time(
+                blueprint.geode_robot_ore_cost,
+                self.ore_count,
+                self.ore_robot_count,
+            ));
             if wait_time <= self.time_left {
                 q.push(State {
                     time_left: self.time_left - wait_time,
                     geode_robot_count: self.geode_robot_count + 1,
-                    ore_count: self.ore_count + wait_time * self.ore_robot_count - blueprint.geode_robot_ore_cost,
+                    ore_count: self.ore_count + wait_time * self.ore_robot_count
+                        - blueprint.geode_robot_ore_cost,
                     clay_count: self.clay_count + wait_time * self.clay_robot_count,
-                    obsidian_count: self.obsidian_count + wait_time * self.obsidian_robot_count - blueprint.geode_robot_obsidian_cost,
+                    obsidian_count: self.obsidian_count + wait_time * self.obsidian_robot_count
+                        - blueprint.geode_robot_obsidian_cost,
                     geode_count: self.geode_count + wait_time * self.geode_robot_count,
                     ..*self
                 })
@@ -96,15 +108,26 @@ impl State {
         }
 
         if (self.clay_count >= blueprint.obsidian_robot_clay_cost || self.clay_robot_count > 0)
-            && (self.ore_count >= blueprint.obsidian_robot_ore_cost || self.ore_robot_count > 0) {
-            let wait_time = 1 + calc_wait_time(blueprint.obsidian_robot_clay_cost, self.clay_count, self.clay_robot_count)
-                .max(calc_wait_time(blueprint.obsidian_robot_ore_cost, self.ore_count, self.ore_robot_count));
+            && (self.ore_count >= blueprint.obsidian_robot_ore_cost || self.ore_robot_count > 0)
+        {
+            let wait_time = 1 + calc_wait_time(
+                blueprint.obsidian_robot_clay_cost,
+                self.clay_count,
+                self.clay_robot_count,
+            )
+            .max(calc_wait_time(
+                blueprint.obsidian_robot_ore_cost,
+                self.ore_count,
+                self.ore_robot_count,
+            ));
             if wait_time <= self.time_left {
                 q.push(State {
                     time_left: self.time_left - wait_time,
                     obsidian_robot_count: self.obsidian_robot_count + 1,
-                    ore_count: self.ore_count + wait_time * self.ore_robot_count - blueprint.obsidian_robot_ore_cost,
-                    clay_count: self.clay_count + wait_time * self.clay_robot_count - blueprint.obsidian_robot_clay_cost,
+                    ore_count: self.ore_count + wait_time * self.ore_robot_count
+                        - blueprint.obsidian_robot_ore_cost,
+                    clay_count: self.clay_count + wait_time * self.clay_robot_count
+                        - blueprint.obsidian_robot_clay_cost,
                     obsidian_count: self.obsidian_count + wait_time * self.obsidian_robot_count,
                     geode_count: self.geode_count + wait_time * self.geode_robot_count,
                     ..*self
@@ -113,12 +136,17 @@ impl State {
         }
 
         if self.ore_count >= blueprint.clay_robot_ore_cost || self.ore_robot_count > 0 {
-            let wait_time = 1 + calc_wait_time(blueprint.clay_robot_ore_cost, self.ore_count, self.ore_robot_count);
+            let wait_time = 1 + calc_wait_time(
+                blueprint.clay_robot_ore_cost,
+                self.ore_count,
+                self.ore_robot_count,
+            );
             if wait_time <= self.time_left {
                 q.push(State {
                     time_left: self.time_left - wait_time,
                     clay_robot_count: self.clay_robot_count + 1,
-                    ore_count: self.ore_count + wait_time * self.ore_robot_count - blueprint.clay_robot_ore_cost,
+                    ore_count: self.ore_count + wait_time * self.ore_robot_count
+                        - blueprint.clay_robot_ore_cost,
                     clay_count: self.clay_count + wait_time * self.clay_robot_count,
                     obsidian_count: self.obsidian_count + wait_time * self.obsidian_robot_count,
                     geode_count: self.geode_count + wait_time * self.geode_robot_count,
@@ -128,12 +156,17 @@ impl State {
         }
 
         if self.ore_count >= blueprint.ore_robot_ore_cost || self.ore_robot_count > 0 {
-            let wait_time = 1 + calc_wait_time(blueprint.ore_robot_ore_cost, self.ore_count, self.ore_robot_count);
+            let wait_time = 1 + calc_wait_time(
+                blueprint.ore_robot_ore_cost,
+                self.ore_count,
+                self.ore_robot_count,
+            );
             if wait_time <= self.time_left {
                 q.push(State {
                     time_left: self.time_left - wait_time,
                     ore_robot_count: self.ore_robot_count + 1,
-                    ore_count: self.ore_count + wait_time * self.ore_robot_count - blueprint.ore_robot_ore_cost,
+                    ore_count: self.ore_count + wait_time * self.ore_robot_count
+                        - blueprint.ore_robot_ore_cost,
                     clay_count: self.clay_count + wait_time * self.clay_robot_count,
                     obsidian_count: self.obsidian_count + wait_time * self.obsidian_robot_count,
                     geode_count: self.geode_count + wait_time * self.geode_robot_count,
@@ -177,7 +210,8 @@ fn max_geode_count(time_left: u32, blueprint: &Blueprint) -> u32 {
 
 #[aoc_generator(day19)]
 pub fn input_generator(input: &str) -> Vec<Blueprint> {
-    input.lines()
+    input
+        .lines()
         .map(str::trim)
         .filter(|l| !l.is_empty())
         .map(|l| l.parse().unwrap())
@@ -186,19 +220,20 @@ pub fn input_generator(input: &str) -> Vec<Blueprint> {
 
 #[aoc(day19, part1)]
 pub fn part1(input: &[Blueprint]) -> u32 {
-    input.iter()
+    input
+        .iter()
         .map(|blueprint| (blueprint.index as u32) * max_geode_count(24, blueprint))
         .sum()
 }
 
 #[aoc(day19, part2)]
 pub fn part2(input: &[Blueprint]) -> u32 {
-    input.iter()
+    input
+        .iter()
         .take(3)
         .map(|blueprint| max_geode_count(32, blueprint))
         .product()
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -208,17 +243,21 @@ mod tests {
 
     #[test]
     fn test_1() {
-        let input = input_generator(r"Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.
+        let input = input_generator(
+            r"Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.
 Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 12 obsidian.
-");
+",
+        );
         assert_eq!(33, part1(&input))
     }
 
     #[test]
     fn test_2() {
-        let input = input_generator(r"Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.
+        let input = input_generator(
+            r"Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsidian robot costs 3 ore and 14 clay. Each geode robot costs 2 ore and 7 obsidian.
 Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 12 obsidian.
-");
+",
+        );
         assert_eq!(3472, part2(&input))
     }
 }

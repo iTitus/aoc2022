@@ -38,14 +38,15 @@ impl FromStr for Dir {
             "U" => Ok(Dir::Up),
             "L" => Ok(Dir::Left),
             "R" => Ok(Dir::Right),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }
 
 #[aoc_generator(day9)]
 pub fn input_generator(input: &str) -> Vec<(Dir, usize)> {
-    input.lines()
+    input
+        .lines()
         .map(|l| l.trim())
         .filter(|l| !l.is_empty())
         .map(|l| {

@@ -4,11 +4,21 @@ use rustc_hash::FxHashSet;
 
 pub type Pos = Vector2<i32>;
 
-const CARD_DIRS: [Pos; 4] = [Pos::new(0, -1), Pos::new(0, 1), Pos::new(-1, 0), Pos::new(1, 0)];
+const CARD_DIRS: [Pos; 4] = [
+    Pos::new(0, -1),
+    Pos::new(0, 1),
+    Pos::new(-1, 0),
+    Pos::new(1, 0),
+];
 const NEIGHBORS: [Pos; 8] = [
-    Pos::new(-1, -1), Pos::new(0, -1), Pos::new(1, -1),
-    Pos::new(-1, 0), Pos::new(1, 0),
-    Pos::new(-1, 1), Pos::new(0, 1), Pos::new(1, 1)
+    Pos::new(-1, -1),
+    Pos::new(0, -1),
+    Pos::new(1, -1),
+    Pos::new(-1, 0),
+    Pos::new(1, 0),
+    Pos::new(-1, 1),
+    Pos::new(0, 1),
+    Pos::new(1, 1),
 ];
 const CLEARANCE: [[Pos; 3]; 4] = [
     [Pos::new(-1, -1), Pos::new(0, -1), Pos::new(1, -1)],
@@ -19,7 +29,8 @@ const CLEARANCE: [[Pos; 3]; 4] = [
 
 #[aoc_generator(day23)]
 pub fn input_generator(input: &str) -> FxHashSet<Pos> {
-    input.lines()
+    input
+        .lines()
         .map(str::trim)
         .filter(|l| !l.is_empty())
         .enumerate()
@@ -42,7 +53,10 @@ fn step<const MAX_STEPS: usize>(grid: &FxHashSet<Pos>) -> (usize, FxHashSet<Pos>
             if NEIGHBORS.iter().any(|p| old_grid.contains(&(pos + p))) {
                 for orig_dir_index in 0..4 {
                     let dir_index = (orig_dir_index + i) % 4;
-                    if CLEARANCE[dir_index].iter().all(|p| !old_grid.contains(&(pos + p))) {
+                    if CLEARANCE[dir_index]
+                        .iter()
+                        .all(|p| !old_grid.contains(&(pos + p)))
+                    {
                         let dir = &CARD_DIRS[dir_index];
                         let target = pos + dir;
                         if !grid.insert(target) {
@@ -109,39 +123,45 @@ mod tests {
 
     #[test]
     fn test_small() {
-        let input = input_generator(r".....
+        let input = input_generator(
+            r".....
 ..##.
 ..#..
 .....
 ..##.
 .....
-");
+",
+        );
         assert_eq!(25, part1(&input))
     }
 
     #[test]
     fn test_1() {
-        let input = input_generator(r"....#..
+        let input = input_generator(
+            r"....#..
 ..###.#
 #...#.#
 .#...##
 #.###..
 ##.#.##
 .#..#..
-");
+",
+        );
         assert_eq!(110, part1(&input))
     }
 
     #[test]
     fn test_2() {
-        let input = input_generator(r"....#..
+        let input = input_generator(
+            r"....#..
 ..###.#
 #...#.#
 .#...##
 #.###..
 ##.#.##
 .#..#..
-");
+",
+        );
         assert_eq!(20, part2(&input))
     }
 }

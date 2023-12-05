@@ -25,7 +25,8 @@ pub fn input_generator(input: &str) -> Vec<Valve> {
     }
 
     let r = Regex::new(r"^Valve ([A-Z]{2}) has flow rate=(\d+); tunnels? leads? to valves? ([A-Z]{2}(?:, [A-Z]{2})*)$").unwrap();
-    let mut valves: FxHashMap<NameT, ParseValve> = input.lines()
+    let mut valves: FxHashMap<NameT, ParseValve> = input
+        .lines()
         .map(str::trim)
         .filter(|l| !l.is_empty())
         .map(|l| {
@@ -33,19 +34,21 @@ pub fn input_generator(input: &str) -> Vec<Valve> {
             let name = parse_name(&c[1]);
             let flow = c[2].parse().unwrap();
             let connections = c[3].split(", ").map(parse_name).collect();
-            (name,
-             ParseValve {
-                 name,
-                 index: 0,
-                 flow,
-                 connections,
-             }
+            (
+                name,
+                ParseValve {
+                    name,
+                    index: 0,
+                    flow,
+                    connections,
+                },
             )
         })
         .collect();
 
     // order will be [ relevant node 1, ..., relevant node m, AA, ..]
-    valves.values_mut()
+    valves
+        .values_mut()
         .sorted_by_key(|node| (Reverse(node.flow), node.name))
         .enumerate()
         .for_each(|(n, node)| node.index = n);
@@ -73,10 +76,10 @@ pub fn input_generator(input: &str) -> Vec<Valve> {
         dist
     }
 
-    let sorted_valves: Vec<&ParseValve> = valves.values()
-        .sorted_by_key(|node| node.index)
-        .collect();
-    sorted_valves.iter()
+    let sorted_valves: Vec<&ParseValve> =
+        valves.values().sorted_by_key(|node| node.index).collect();
+    sorted_valves
+        .iter()
         .filter(|node| node.flow > 0 || node.name == START)
         .map(|node| {
             let mut dist = bfs(&valves, node);
@@ -132,7 +135,9 @@ pub fn part1(valves: &[Valve]) -> u32 {
 
         // branch pruning
         if state.time_left > 1 {
-            let max_pressure_to_get: u32 = valves[state.pos].connections.iter()
+            let max_pressure_to_get: u32 = valves[state.pos]
+                .connections
+                .iter()
                 .filter(|(n, _)| state.open & (1 << **n) == 0)
                 .map(|(n, d)| gain(state.time_left, *d, valves[*n].flow))
                 .sum();
@@ -142,7 +147,9 @@ pub fn part1(valves: &[Valve]) -> u32 {
         }
 
         // iterate over all unopened valves you can travel to and open in time (sorted by expected gain)
-        for (n, d) in valves[state.pos].connections.iter()
+        for (n, d) in valves[state.pos]
+            .connections
+            .iter()
             .filter(|(n, d)| **d + 1 < state.time_left && (state.open & (1 << **n)) == 0)
         {
             let mut new_state = state;
@@ -194,14 +201,32 @@ pub fn part2(valves: &[Valve]) -> u32 {
 
         // branch pruning, can use idx because valves is sorted by flow rate
         let mut idx = 0;
-        let max_pressure_to_get: u32 = valves.iter()
+        let max_pressure_to_get: u32 = valves
+            .iter()
             .enumerate()
             .filter(|(n, v)| v.flow > 0 && state.open & (1 << *n) == 0)
             .map(|(n, v)| {
                 let d1 = valves[state.pos1].connections[&n];
                 let d2 = valves[state.pos2].connections[&n];
                 idx += 1;
-                gain(if idx <= state.time_left1 { state.time_left1 - (idx - 1) } else { 0 }, d1, v.flow).max(gain(if idx <= state.time_left2 { state.time_left2 - (idx - 1) } else { 0 }, d2, v.flow))
+                gain(
+                    if idx <= state.time_left1 {
+                        state.time_left1 - (idx - 1)
+                    } else {
+                        0
+                    },
+                    d1,
+                    v.flow,
+                )
+                .max(gain(
+                    if idx <= state.time_left2 {
+                        state.time_left2 - (idx - 1)
+                    } else {
+                        0
+                    },
+                    d2,
+                    v.flow,
+                ))
             })
             .sum();
         if state.total_pressure + max_pressure_to_get <= max {
@@ -209,9 +234,11 @@ pub fn part2(valves: &[Valve]) -> u32 {
         }
 
         // for pos1: iterate over all unopened valves you can travel to and open in time
-        for (n, d) in valves[state.pos1].connections.iter()
-            .filter(|(n, d)| **d + 1 < state.time_left1 && (state.open & (1 << **n)) == 0 && **d <= valves[state.pos2].connections[*n])
-        {
+        for (n, d) in valves[state.pos1].connections.iter().filter(|(n, d)| {
+            **d + 1 < state.time_left1
+                && (state.open & (1 << **n)) == 0
+                && **d <= valves[state.pos2].connections[*n]
+        }) {
             let mut new_state = state;
             new_state.time_left1 -= *d + 1;
             new_state.total_pressure += gain(state.time_left1, *d, valves[*n].flow);
@@ -222,9 +249,11 @@ pub fn part2(valves: &[Valve]) -> u32 {
 
         if state.pos1 != state.pos2 {
             // for pos2: iterate over all unopened valves you can travel to and open in time
-            for (n, d) in valves[state.pos2].connections.iter()
-                .filter(|(n, d)| **d + 1 < state.time_left2 && (state.open & (1 << **n)) == 0 && **d <= valves[state.pos1].connections[*n])
-            {
+            for (n, d) in valves[state.pos2].connections.iter().filter(|(n, d)| {
+                **d + 1 < state.time_left2
+                    && (state.open & (1 << **n)) == 0
+                    && **d <= valves[state.pos1].connections[*n]
+            }) {
                 let mut new_state = state;
                 new_state.time_left2 -= *d + 1;
                 new_state.total_pressure += gain(state.time_left2, *d, valves[*n].flow);
@@ -246,7 +275,8 @@ mod tests {
 
     #[test]
     fn test_1() {
-        let input = input_generator(r"Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
+        let input = input_generator(
+            r"Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
 Valve BB has flow rate=13; tunnels lead to valves CC, AA
 Valve CC has flow rate=2; tunnels lead to valves DD, BB
 Valve DD has flow rate=20; tunnels lead to valves CC, AA, EE
@@ -256,13 +286,15 @@ Valve GG has flow rate=0; tunnels lead to valves FF, HH
 Valve HH has flow rate=22; tunnel leads to valve GG
 Valve II has flow rate=0; tunnels lead to valves AA, JJ
 Valve JJ has flow rate=21; tunnel leads to valve II
-");
+",
+        );
         assert_eq!(1651, part1(&input))
     }
 
     #[test]
     fn test_2() {
-        let input = input_generator(r"Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
+        let input = input_generator(
+            r"Valve AA has flow rate=0; tunnels lead to valves DD, II, BB
 Valve BB has flow rate=13; tunnels lead to valves CC, AA
 Valve CC has flow rate=2; tunnels lead to valves DD, BB
 Valve DD has flow rate=20; tunnels lead to valves CC, AA, EE
@@ -272,8 +304,8 @@ Valve GG has flow rate=0; tunnels lead to valves FF, HH
 Valve HH has flow rate=22; tunnel leads to valve GG
 Valve II has flow rate=0; tunnels lead to valves AA, JJ
 Valve JJ has flow rate=21; tunnel leads to valve II
-");
+",
+        );
         assert_eq!(1707, part2(&input))
     }
 }
-

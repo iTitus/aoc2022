@@ -85,7 +85,8 @@ impl Monkeys {
             }
         }
 
-        self.monkeys.iter()
+        self.monkeys
+            .iter()
             .map(|m| m.inspections)
             .sorted_by_key(|&n| Reverse(n))
             .take(2)
@@ -101,14 +102,23 @@ pub fn input_generator(input: &str) -> Monkeys {
   Operation: new = ([old +*0-9]+)
   Test: divisible by (\d+)
     If true: throw to monkey (\d+)
-    If false: throw to monkey (\d+)$"
-    ).unwrap();
+    If false: throw to monkey (\d+)$",
+    )
+    .unwrap();
     Monkeys {
-        monkeys: input.trim().split("\n\n")
+        monkeys: input
+            .trim()
+            .split("\n\n")
             .map(|s| {
                 let caps = re.captures(s).unwrap();
                 // let index: usize = caps.get(1).unwrap().as_str().parse().unwrap();
-                let items: VecDeque<u64> = caps.get(2).unwrap().as_str().split(", ").map(|n| n.parse().unwrap()).collect();
+                let items: VecDeque<u64> = caps
+                    .get(2)
+                    .unwrap()
+                    .as_str()
+                    .split(", ")
+                    .map(|n| n.parse().unwrap())
+                    .collect();
                 let operation: Operation = caps.get(3).unwrap().as_str().parse().unwrap();
                 let divisibility_test: u64 = caps.get(4).unwrap().as_str().parse().unwrap();
                 let true_target: usize = caps.get(5).unwrap().as_str().parse().unwrap();
@@ -122,7 +132,7 @@ pub fn input_generator(input: &str) -> Monkeys {
                     inspections: 0,
                 }
             })
-            .collect()
+            .collect(),
     }
 }
 

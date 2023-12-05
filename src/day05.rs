@@ -25,9 +25,7 @@ impl Stacks {
     }
 
     pub fn top_str(&self) -> String {
-        self.stacks.iter()
-            .filter_map(|s| s.last())
-            .collect()
+        self.stacks.iter().filter_map(|s| s.last()).collect()
     }
 }
 
@@ -35,30 +33,34 @@ impl Stacks {
 pub fn input_generator(input: &str) -> (Stacks, Vec<Move>) {
     let (a, b): (&str, &str) = input.split_once("\n\n").unwrap();
 
-    let stacks: Vec<Vec<char>> =
-        {
-            let lines = a.lines().collect_vec();
-            // let's hope all chars and numbers will always be ascii and only one char long
-            let cols = (lines.last().unwrap().len() + 1) / 4;
+    let stacks: Vec<Vec<char>> = {
+        let lines = a.lines().collect_vec();
+        // let's hope all chars and numbers will always be ascii and only one char long
+        let cols = (lines.last().unwrap().len() + 1) / 4;
 
-            fn to_col_idx(i: usize) -> usize {
-                i * 4 + 1
-            }
+        fn to_col_idx(i: usize) -> usize {
+            i * 4 + 1
+        }
 
-            (0..cols).into_iter()
-                .map(to_col_idx)
-                .map(|i| lines.iter()
+        (0..cols)
+            .into_iter()
+            .map(to_col_idx)
+            .map(|i| {
+                lines
+                    .iter()
                     .rev()
                     .skip(1)
                     .map(|s| s.as_bytes()[i] as char)
                     .filter(|c| *c != ' ')
-                    .collect())
-                .collect()
-        };
+                    .collect()
+            })
+            .collect()
+    };
 
     let moves: Vec<(usize, usize, usize)> = {
         let r = Regex::new(r"^move (\d+) from (\d+) to (\d+)$").unwrap();
-        b.trim().lines()
+        b.trim()
+            .lines()
             .map(|l| l.trim())
             .filter(|l| !l.is_empty())
             .map(|l| {

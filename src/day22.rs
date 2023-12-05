@@ -62,9 +62,10 @@ pub enum Command {
 
 #[aoc_generator(day22)]
 pub fn input_generator(input: &str) -> (usize, usize, FxHashMap<Pos, Face>, Vec<Command>) {
-    fn min_face_len(it: impl IntoIterator<Item=char>) -> usize {
+    fn min_face_len(it: impl IntoIterator<Item = char>) -> usize {
         it.into_iter()
-            .group_by(|&c| c == ' ').into_iter()
+            .group_by(|&c| c == ' ')
+            .into_iter()
             .filter_map(|(_, g)| {
                 let c = g.count();
                 if c > 0 {
@@ -73,23 +74,27 @@ pub fn input_generator(input: &str) -> (usize, usize, FxHashMap<Pos, Face>, Vec<
                     None
                 }
             })
-            .min().unwrap()
+            .min()
+            .unwrap()
     }
 
     let (map, commands) = input.split_once("\n\n").unwrap();
     let map = map.lines().collect_vec();
     let min_face_len_horizontal = map.iter().map(|&l| min_face_len(l.chars())).min().unwrap();
     let min_face_len_vertical = (0..(map.iter().map(|l| l.len()).max().unwrap()))
-        .map(|i| map.iter().map(move |&l| {
-            let bytes = l.as_bytes();
-            if i >= bytes.len() {
-                ' '
-            } else {
-                bytes[i] as char
-            }
-        }))
+        .map(|i| {
+            map.iter().map(move |&l| {
+                let bytes = l.as_bytes();
+                if i >= bytes.len() {
+                    ' '
+                } else {
+                    bytes[i] as char
+                }
+            })
+        })
         .map(min_face_len)
-        .min().unwrap();
+        .min()
+        .unwrap();
     let size = gcd(min_face_len_horizontal, min_face_len_vertical);
 
     let max_width = map.iter().map(|l| l.len()).max().unwrap();
@@ -107,22 +112,20 @@ pub fn input_generator(input: &str) -> (usize, usize, FxHashMap<Pos, Face>, Vec<
                 continue;
             }
 
-            let tiles = y_block.iter()
+            let tiles = y_block
+                .iter()
                 .flat_map(|l| l[(x * size)..((x + 1) * size)].bytes())
                 .map(|b| match b {
                     b'.' => Tile::Empty,
                     b'#' => Tile::Wall,
-                    _ => panic!()
+                    _ => panic!(),
                 })
                 .collect_vec();
 
             let real_x = x as i32 - first_face_offset as i32;
             let real_y = y as i32;
             let pos = Pos::new(real_x, real_y);
-            let face = Face {
-                tiles,
-                size,
-            };
+            let face = Face { tiles, size };
 
             faces.insert(pos, face);
         }
@@ -163,58 +166,71 @@ pub fn input_generator(input: &str) -> (usize, usize, FxHashMap<Pos, Face>, Vec<
 }
 
 #[aoc(day22, part1)]
-pub fn part1((size, first_face_offset, faces, commands): &(usize, usize, FxHashMap<Pos, Face>, Vec<Command>)) -> i32 {
+pub fn part1(
+    (size, first_face_offset, faces, commands): &(usize, usize, FxHashMap<Pos, Face>, Vec<Command>),
+) -> i32 {
     let mut face_pos = Pos::new(0, 0);
     let mut pos = faces[&face_pos].first_free();
     let mut dir = Dir::East;
     for &cmd in commands {
         match cmd {
-            Command::Left => dir = match dir {
-                Dir::North => Dir::West,
-                Dir::East => Dir::North,
-                Dir::South => Dir::East,
-                Dir::West => Dir::South,
-            },
-            Command::Right => dir = match dir {
-                Dir::North => Dir::East,
-                Dir::East => Dir::South,
-                Dir::South => Dir::West,
-                Dir::West => Dir::North,
-            },
-            Command::Forward(distance) => for _ in 0..distance {
-                let mut new_face_pos = face_pos;
-                let mut new_pos: Pos = pos + dir.vec();
-                if new_pos.x < 0 || new_pos.x >= *size as i32 || new_pos.y < 0 || new_pos.y >= *size as i32 {
-                    new_pos.x = new_pos.x.rem_euclid(*size as i32);
-                    new_pos.y = new_pos.y.rem_euclid(*size as i32);
+            Command::Left => {
+                dir = match dir {
+                    Dir::North => Dir::West,
+                    Dir::East => Dir::North,
+                    Dir::South => Dir::East,
+                    Dir::West => Dir::South,
+                }
+            }
+            Command::Right => {
+                dir = match dir {
+                    Dir::North => Dir::East,
+                    Dir::East => Dir::South,
+                    Dir::South => Dir::West,
+                    Dir::West => Dir::North,
+                }
+            }
+            Command::Forward(distance) => {
+                for _ in 0..distance {
+                    let mut new_face_pos = face_pos;
+                    let mut new_pos: Pos = pos + dir.vec();
+                    if new_pos.x < 0
+                        || new_pos.x >= *size as i32
+                        || new_pos.y < 0
+                        || new_pos.y >= *size as i32
+                    {
+                        new_pos.x = new_pos.x.rem_euclid(*size as i32);
+                        new_pos.y = new_pos.y.rem_euclid(*size as i32);
 
-                    new_face_pos += dir.vec();
-                    if !faces.contains_key(&new_face_pos) {
-                        new_face_pos = face_pos;
-                        let opposite_dir = match dir {
-                            Dir::North => Dir::South,
-                            Dir::East => Dir::West,
-                            Dir::South => Dir::North,
-                            Dir::West => Dir::East
-                        }.vec();
-                        loop {
-                            let new_new_face_pos: Pos = new_face_pos + opposite_dir;
-                            if !faces.contains_key(&new_new_face_pos) {
-                                break;
+                        new_face_pos += dir.vec();
+                        if !faces.contains_key(&new_face_pos) {
+                            new_face_pos = face_pos;
+                            let opposite_dir = match dir {
+                                Dir::North => Dir::South,
+                                Dir::East => Dir::West,
+                                Dir::South => Dir::North,
+                                Dir::West => Dir::East,
                             }
+                            .vec();
+                            loop {
+                                let new_new_face_pos: Pos = new_face_pos + opposite_dir;
+                                if !faces.contains_key(&new_new_face_pos) {
+                                    break;
+                                }
 
-                            new_face_pos = new_new_face_pos;
+                                new_face_pos = new_new_face_pos;
+                            }
                         }
                     }
-                }
 
-                if faces[&new_face_pos].can_go(&new_pos) {
-                    face_pos = new_face_pos;
-                    pos = new_pos;
-                } else {
-                    break;
+                    if faces[&new_face_pos].can_go(&new_pos) {
+                        face_pos = new_face_pos;
+                        pos = new_pos;
+                    } else {
+                        break;
+                    }
                 }
-            },
+            }
         }
     }
 
@@ -230,226 +246,265 @@ pub fn part1((size, first_face_offset, faces, commands): &(usize, usize, FxHashM
 }
 
 #[aoc(day22, part2)]
-pub fn part2((size, first_face_offset, faces, commands): &(usize, usize, FxHashMap<Pos, Face>, Vec<Command>)) -> i32 {
+pub fn part2(
+    (size, first_face_offset, faces, commands): &(usize, usize, FxHashMap<Pos, Face>, Vec<Command>),
+) -> i32 {
     let mut face_pos = Pos::new(0, 0);
     let mut pos = faces[&face_pos].first_free();
     let mut dir = Dir::East;
     for &cmd in commands {
         match cmd {
-            Command::Left => dir = match dir {
-                Dir::North => Dir::West,
-                Dir::East => Dir::North,
-                Dir::South => Dir::East,
-                Dir::West => Dir::South,
-            },
-            Command::Right => dir = match dir {
-                Dir::North => Dir::East,
-                Dir::East => Dir::South,
-                Dir::South => Dir::West,
-                Dir::West => Dir::North,
-            },
-            Command::Forward(distance) => for _ in 0..distance {
-                let mut new_face_pos = face_pos;
-                let mut new_pos: Pos = pos + dir.vec();
-                let mut new_dir = dir;
-                if new_pos.x < 0 || new_pos.x >= *size as i32 || new_pos.y < 0 || new_pos.y >= *size as i32 {
-                    new_pos.x = new_pos.x.rem_euclid(*size as i32);
-                    new_pos.y = new_pos.y.rem_euclid(*size as i32);
+            Command::Left => {
+                dir = match dir {
+                    Dir::North => Dir::West,
+                    Dir::East => Dir::North,
+                    Dir::South => Dir::East,
+                    Dir::West => Dir::South,
+                }
+            }
+            Command::Right => {
+                dir = match dir {
+                    Dir::North => Dir::East,
+                    Dir::East => Dir::South,
+                    Dir::South => Dir::West,
+                    Dir::West => Dir::North,
+                }
+            }
+            Command::Forward(distance) => {
+                for _ in 0..distance {
+                    let mut new_face_pos = face_pos;
+                    let mut new_pos: Pos = pos + dir.vec();
+                    let mut new_dir = dir;
+                    if new_pos.x < 0
+                        || new_pos.x >= *size as i32
+                        || new_pos.y < 0
+                        || new_pos.y >= *size as i32
+                    {
+                        new_pos.x = new_pos.x.rem_euclid(*size as i32);
+                        new_pos.y = new_pos.y.rem_euclid(*size as i32);
 
-                    new_face_pos += dir.vec();
-                    if !faces.contains_key(&new_face_pos) {
-                        match size {
-                            4 => {
-                                match (face_pos.x, face_pos.y, dir) {
-                                    // Top <-> North
-                                    (0, 0, Dir::North) => {
-                                        new_face_pos = Pos::new(-2, 1);
-                                        new_pos = Pos::new(*size as i32 - 1 - pos.x, 0);
-                                        new_dir = Dir::South;
-                                    }
-                                    (-2, 1, Dir::North) => {
-                                        new_face_pos = Pos::new(0, 0);
-                                        new_pos = Pos::new(*size as i32 - 1 - pos.x, 0);
-                                        new_dir = Dir::South;
-                                    }
+                        new_face_pos += dir.vec();
+                        if !faces.contains_key(&new_face_pos) {
+                            match size {
+                                4 => {
+                                    match (face_pos.x, face_pos.y, dir) {
+                                        // Top <-> North
+                                        (0, 0, Dir::North) => {
+                                            new_face_pos = Pos::new(-2, 1);
+                                            new_pos = Pos::new(*size as i32 - 1 - pos.x, 0);
+                                            new_dir = Dir::South;
+                                        }
+                                        (-2, 1, Dir::North) => {
+                                            new_face_pos = Pos::new(0, 0);
+                                            new_pos = Pos::new(*size as i32 - 1 - pos.x, 0);
+                                            new_dir = Dir::South;
+                                        }
 
-                                    // Top <-> West
-                                    (0, 0, Dir::West) => {
-                                        new_face_pos = Pos::new(-1, 1);
-                                        new_pos = Pos::new(pos.y, 0);
-                                        new_dir = Dir::South;
-                                    }
-                                    (-1, 1, Dir::North) => {
-                                        new_face_pos = Pos::new(0, 0);
-                                        new_pos = Pos::new(0, pos.x);
-                                        new_dir = Dir::East;
-                                    }
+                                        // Top <-> West
+                                        (0, 0, Dir::West) => {
+                                            new_face_pos = Pos::new(-1, 1);
+                                            new_pos = Pos::new(pos.y, 0);
+                                            new_dir = Dir::South;
+                                        }
+                                        (-1, 1, Dir::North) => {
+                                            new_face_pos = Pos::new(0, 0);
+                                            new_pos = Pos::new(0, pos.x);
+                                            new_dir = Dir::East;
+                                        }
 
-                                    // Top <-> East
-                                    (0, 0, Dir::East) => {
-                                        new_face_pos = Pos::new(1, 2);
-                                        new_pos = Pos::new(*size as i32 - 1, *size as i32 - 1 - pos.y);
-                                        new_dir = Dir::West;
-                                    }
-                                    (1, 2, Dir::East) => {
-                                        new_face_pos = Pos::new(0, 0);
-                                        new_pos = Pos::new(*size as i32 - 1, *size as i32 - 1 - pos.y);
-                                        new_dir = Dir::West;
-                                    }
+                                        // Top <-> East
+                                        (0, 0, Dir::East) => {
+                                            new_face_pos = Pos::new(1, 2);
+                                            new_pos = Pos::new(
+                                                *size as i32 - 1,
+                                                *size as i32 - 1 - pos.y,
+                                            );
+                                            new_dir = Dir::West;
+                                        }
+                                        (1, 2, Dir::East) => {
+                                            new_face_pos = Pos::new(0, 0);
+                                            new_pos = Pos::new(
+                                                *size as i32 - 1,
+                                                *size as i32 - 1 - pos.y,
+                                            );
+                                            new_dir = Dir::West;
+                                        }
 
-                                    // South <-> East
-                                    (0, 1, Dir::East) => {
-                                        new_face_pos = Pos::new(1, 2);
-                                        new_pos = Pos::new(*size as i32 - 1 - pos.y, 0);
-                                        new_dir = Dir::South;
-                                    }
-                                    (1, 2, Dir::North) => {
-                                        new_face_pos = Pos::new(0, 1);
-                                        new_pos = Pos::new(*size as i32 - 1, *size as i32 - 1 - pos.x);
-                                        new_dir = Dir::West;
-                                    }
+                                        // South <-> East
+                                        (0, 1, Dir::East) => {
+                                            new_face_pos = Pos::new(1, 2);
+                                            new_pos = Pos::new(*size as i32 - 1 - pos.y, 0);
+                                            new_dir = Dir::South;
+                                        }
+                                        (1, 2, Dir::North) => {
+                                            new_face_pos = Pos::new(0, 1);
+                                            new_pos = Pos::new(
+                                                *size as i32 - 1,
+                                                *size as i32 - 1 - pos.x,
+                                            );
+                                            new_dir = Dir::West;
+                                        }
 
-                                    // West <-> Down
-                                    (-1, 1, Dir::South) => {
-                                        new_face_pos = Pos::new(0, 2);
-                                        new_pos = Pos::new(0, *size as i32 - 1 - pos.x);
-                                        new_dir = Dir::East;
-                                    }
-                                    (0, 2, Dir::West) => {
-                                        new_face_pos = Pos::new(-1, 1);
-                                        new_pos = Pos::new(*size as i32 - 1 - pos.y, *size as i32 - 1);
-                                        new_dir = Dir::North;
-                                    }
+                                        // West <-> Down
+                                        (-1, 1, Dir::South) => {
+                                            new_face_pos = Pos::new(0, 2);
+                                            new_pos = Pos::new(0, *size as i32 - 1 - pos.x);
+                                            new_dir = Dir::East;
+                                        }
+                                        (0, 2, Dir::West) => {
+                                            new_face_pos = Pos::new(-1, 1);
+                                            new_pos = Pos::new(
+                                                *size as i32 - 1 - pos.y,
+                                                *size as i32 - 1,
+                                            );
+                                            new_dir = Dir::North;
+                                        }
 
-                                    // North <-> Down
-                                    (-2, 1, Dir::South) => {
-                                        new_face_pos = Pos::new(0, 2);
-                                        new_pos = Pos::new(*size as i32 - 1 - pos.x, *size as i32 - 1);
-                                        new_dir = Dir::North;
-                                    }
-                                    (0, 2, Dir::South) => {
-                                        new_face_pos = Pos::new(-2, 1);
-                                        new_pos = Pos::new(*size as i32 - 1 - pos.x, *size as i32 - 1);
-                                        new_dir = Dir::North;
-                                    }
+                                        // North <-> Down
+                                        (-2, 1, Dir::South) => {
+                                            new_face_pos = Pos::new(0, 2);
+                                            new_pos = Pos::new(
+                                                *size as i32 - 1 - pos.x,
+                                                *size as i32 - 1,
+                                            );
+                                            new_dir = Dir::North;
+                                        }
+                                        (0, 2, Dir::South) => {
+                                            new_face_pos = Pos::new(-2, 1);
+                                            new_pos = Pos::new(
+                                                *size as i32 - 1 - pos.x,
+                                                *size as i32 - 1,
+                                            );
+                                            new_dir = Dir::North;
+                                        }
 
-                                    // North <-> East
-                                    (-2, 1, Dir::West) => {
-                                        new_face_pos = Pos::new(1, 2);
-                                        new_pos = Pos::new(*size as i32 - 1 - pos.y, *size as i32 - 1);
-                                        new_dir = Dir::North;
-                                    }
-                                    (1, 2, Dir::South) => {
-                                        new_face_pos = Pos::new(-2, 1);
-                                        new_pos = Pos::new(0, *size as i32 - 1 - pos.x);
-                                        new_dir = Dir::East;
-                                    }
+                                        // North <-> East
+                                        (-2, 1, Dir::West) => {
+                                            new_face_pos = Pos::new(1, 2);
+                                            new_pos = Pos::new(
+                                                *size as i32 - 1 - pos.y,
+                                                *size as i32 - 1,
+                                            );
+                                            new_dir = Dir::North;
+                                        }
+                                        (1, 2, Dir::South) => {
+                                            new_face_pos = Pos::new(-2, 1);
+                                            new_pos = Pos::new(0, *size as i32 - 1 - pos.x);
+                                            new_dir = Dir::East;
+                                        }
 
-                                    _ => unreachable!()
+                                        _ => unreachable!(),
+                                    }
                                 }
-                            }
-                            50 => {
-                                match (face_pos.x, face_pos.y, dir) {
-                                    // Top <-> North
-                                    (0, 0, Dir::North) => {
-                                        new_face_pos = Pos::new(-1, 3);
-                                        new_pos = Pos::new(0, pos.x);
-                                        new_dir = Dir::East;
-                                    }
-                                    (-1, 3, Dir::West) => {
-                                        new_face_pos = Pos::new(0, 0);
-                                        new_pos = Pos::new(pos.y, 0);
-                                        new_dir = Dir::South;
-                                    }
+                                50 => {
+                                    match (face_pos.x, face_pos.y, dir) {
+                                        // Top <-> North
+                                        (0, 0, Dir::North) => {
+                                            new_face_pos = Pos::new(-1, 3);
+                                            new_pos = Pos::new(0, pos.x);
+                                            new_dir = Dir::East;
+                                        }
+                                        (-1, 3, Dir::West) => {
+                                            new_face_pos = Pos::new(0, 0);
+                                            new_pos = Pos::new(pos.y, 0);
+                                            new_dir = Dir::South;
+                                        }
 
-                                    // Top <-> West
-                                    (0, 0, Dir::West) => {
-                                        new_face_pos = Pos::new(-1, 2);
-                                        new_pos = Pos::new(0, *size as i32 - 1 - pos.y);
-                                        new_dir = Dir::East;
-                                    }
-                                    (-1, 2, Dir::West) => {
-                                        new_face_pos = Pos::new(0, 0);
-                                        new_pos = Pos::new(0, *size as i32 - 1 - pos.y);
-                                        new_dir = Dir::East;
-                                    }
+                                        // Top <-> West
+                                        (0, 0, Dir::West) => {
+                                            new_face_pos = Pos::new(-1, 2);
+                                            new_pos = Pos::new(0, *size as i32 - 1 - pos.y);
+                                            new_dir = Dir::East;
+                                        }
+                                        (-1, 2, Dir::West) => {
+                                            new_face_pos = Pos::new(0, 0);
+                                            new_pos = Pos::new(0, *size as i32 - 1 - pos.y);
+                                            new_dir = Dir::East;
+                                        }
 
-                                    // East <-> North
-                                    (1, 0, Dir::North) => {
-                                        new_face_pos = Pos::new(-1, 3);
-                                        new_pos = Pos::new(pos.x, *size as i32 - 1);
-                                        new_dir = Dir::North;
-                                    }
-                                    (-1, 3, Dir::South) => {
-                                        new_face_pos = Pos::new(1, 0);
-                                        new_pos = Pos::new(pos.x, 0);
-                                        new_dir = Dir::South;
-                                    }
+                                        // East <-> North
+                                        (1, 0, Dir::North) => {
+                                            new_face_pos = Pos::new(-1, 3);
+                                            new_pos = Pos::new(pos.x, *size as i32 - 1);
+                                            new_dir = Dir::North;
+                                        }
+                                        (-1, 3, Dir::South) => {
+                                            new_face_pos = Pos::new(1, 0);
+                                            new_pos = Pos::new(pos.x, 0);
+                                            new_dir = Dir::South;
+                                        }
 
-                                    // East <-> Down
-                                    (1, 0, Dir::East) => {
-                                        new_face_pos = Pos::new(0, 2);
-                                        new_pos = Pos::new(*size as i32 - 1, *size as i32 - 1 - pos.y);
-                                        new_dir = Dir::West;
-                                    }
-                                    (0, 2, Dir::East) => {
-                                        new_face_pos = Pos::new(1, 0);
-                                        new_pos = Pos::new(*size as i32 - 1, *size as i32 - 1 - pos.y);
-                                        new_dir = Dir::West;
-                                    }
+                                        // East <-> Down
+                                        (1, 0, Dir::East) => {
+                                            new_face_pos = Pos::new(0, 2);
+                                            new_pos = Pos::new(
+                                                *size as i32 - 1,
+                                                *size as i32 - 1 - pos.y,
+                                            );
+                                            new_dir = Dir::West;
+                                        }
+                                        (0, 2, Dir::East) => {
+                                            new_face_pos = Pos::new(1, 0);
+                                            new_pos = Pos::new(
+                                                *size as i32 - 1,
+                                                *size as i32 - 1 - pos.y,
+                                            );
+                                            new_dir = Dir::West;
+                                        }
 
-                                    // East <-> South
-                                    (1, 0, Dir::South) => {
-                                        new_face_pos = Pos::new(0, 1);
-                                        new_pos = Pos::new(*size as i32 - 1, pos.x);
-                                        new_dir = Dir::West;
-                                    }
-                                    (0, 1, Dir::East) => {
-                                        new_face_pos = Pos::new(1, 0);
-                                        new_pos = Pos::new(pos.y, *size as i32 - 1);
-                                        new_dir = Dir::North;
-                                    }
+                                        // East <-> South
+                                        (1, 0, Dir::South) => {
+                                            new_face_pos = Pos::new(0, 1);
+                                            new_pos = Pos::new(*size as i32 - 1, pos.x);
+                                            new_dir = Dir::West;
+                                        }
+                                        (0, 1, Dir::East) => {
+                                            new_face_pos = Pos::new(1, 0);
+                                            new_pos = Pos::new(pos.y, *size as i32 - 1);
+                                            new_dir = Dir::North;
+                                        }
 
-                                    // South <-> West
-                                    (0, 1, Dir::West) => {
-                                        new_face_pos = Pos::new(-1, 2);
-                                        new_pos = Pos::new(pos.y, 0);
-                                        new_dir = Dir::South;
-                                    }
-                                    (-1, 2, Dir::North) => {
-                                        new_face_pos = Pos::new(0, 1);
-                                        new_pos = Pos::new(0, pos.x);
-                                        new_dir = Dir::East;
-                                    }
+                                        // South <-> West
+                                        (0, 1, Dir::West) => {
+                                            new_face_pos = Pos::new(-1, 2);
+                                            new_pos = Pos::new(pos.y, 0);
+                                            new_dir = Dir::South;
+                                        }
+                                        (-1, 2, Dir::North) => {
+                                            new_face_pos = Pos::new(0, 1);
+                                            new_pos = Pos::new(0, pos.x);
+                                            new_dir = Dir::East;
+                                        }
 
-                                    // Down <-> North
-                                    (0, 2, Dir::South) => {
-                                        new_face_pos = Pos::new(-1, 3);
-                                        new_pos = Pos::new(*size as i32 - 1, pos.x);
-                                        new_dir = Dir::West;
-                                    }
-                                    (-1, 3, Dir::East) => {
-                                        new_face_pos = Pos::new(0, 2);
-                                        new_pos = Pos::new(pos.y, *size as i32 - 1);
-                                        new_dir = Dir::North;
-                                    }
+                                        // Down <-> North
+                                        (0, 2, Dir::South) => {
+                                            new_face_pos = Pos::new(-1, 3);
+                                            new_pos = Pos::new(*size as i32 - 1, pos.x);
+                                            new_dir = Dir::West;
+                                        }
+                                        (-1, 3, Dir::East) => {
+                                            new_face_pos = Pos::new(0, 2);
+                                            new_pos = Pos::new(pos.y, *size as i32 - 1);
+                                            new_dir = Dir::North;
+                                        }
 
-                                    _ => unreachable!()
+                                        _ => unreachable!(),
+                                    }
                                 }
+                                _ => unimplemented!(),
                             }
-                            _ => unimplemented!()
                         }
                     }
-                }
 
-                if faces[&new_face_pos].can_go(&new_pos) {
-                    face_pos = new_face_pos;
-                    pos = new_pos;
-                    dir = new_dir;
-                } else {
-                    break;
+                    if faces[&new_face_pos].can_go(&new_pos) {
+                        face_pos = new_face_pos;
+                        pos = new_pos;
+                        dir = new_dir;
+                    } else {
+                        break;
+                    }
                 }
-            },
+            }
         }
     }
 
@@ -472,7 +527,8 @@ mod tests {
 
     #[test]
     fn test_1() {
-        let input = input_generator(r"        ...#
+        let input = input_generator(
+            r"        ...#
         .#..
         #...
         ....
@@ -486,13 +542,15 @@ mod tests {
         ......#.
 
 10R5L5R10L4R5L5
-");
+",
+        );
         assert_eq!(6032, part1(&input))
     }
 
     #[test]
     fn test_2() {
-        let input = input_generator(r"        ...#
+        let input = input_generator(
+            r"        ...#
         .#..
         #...
         ....
@@ -506,7 +564,8 @@ mod tests {
         ......#.
 
 10R5L5R10L4R5L5
-");
+",
+        );
         assert_eq!(5031, part2(&input))
     }
 }

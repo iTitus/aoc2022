@@ -47,9 +47,14 @@ impl Node {
             Ok(())
         } else {
             let child_path = path[0].as_ref();
-            match self.children.iter_mut().filter(|c| c.name == child_path).exactly_one() {
+            match self
+                .children
+                .iter_mut()
+                .filter(|c| c.name == child_path)
+                .exactly_one()
+            {
                 Ok(child) => child.add_child(&path[1..], node),
-                Err(_) => Err(())
+                Err(_) => Err(()),
             }
         }
     }
@@ -57,7 +62,7 @@ impl Node {
     pub fn size(&self) -> usize {
         match self.file_type {
             FileType::File { size } => size,
-            FileType::Dir => self.children.iter().map(|c| c.size()).sum()
+            FileType::Dir => self.children.iter().map(|c| c.size()).sum(),
         }
     }
 
@@ -80,8 +85,11 @@ enum Command {
 
 #[aoc_generator(day7)]
 pub fn input_generator(input: &str) -> Node {
-    let commands = input.lines().map(|l| l.trim()).peekable().batching(|it| {
-        match it.next() {
+    let commands = input
+        .lines()
+        .map(|l| l.trim())
+        .peekable()
+        .batching(|it| match it.next() {
             Some(l1) => {
                 if !l1.starts_with('$') {
                     panic!("expected command starting with '$' but got '{l1}'");
@@ -91,24 +99,23 @@ pub fn input_generator(input: &str) -> Node {
                 let cmd = iter.next().unwrap();
                 let args = iter.map(|s| s.to_string()).collect_vec();
                 let output = it
-                    .peeking_take_while(|l| {
-                        !l.starts_with('$')
-                    })
+                    .peeking_take_while(|l| !l.starts_with('$'))
                     .map(|l| l.to_string())
                     .collect_vec();
 
                 Some(match cmd {
                     "cd" => Command::Cd(CommandInfo { args, output }),
                     "ls" => Command::Ls(CommandInfo { args, output }),
-                    _ => panic!("unknown command {cmd}")
+                    _ => panic!("unknown command {cmd}"),
                 })
             }
-            None => { None }
-        }
-    }).collect_vec();
+            None => None,
+        })
+        .collect_vec();
 
     let first_cmd = &commands[0];
-    if !matches!(first_cmd, Command::Cd(CommandInfo {args, output:_}) if args.len() == 1 && args[0] == "/") {
+    if !matches!(first_cmd, Command::Cd(CommandInfo {args, output:_}) if args.len() == 1 && args[0] == "/")
+    {
         panic!("expected 'cd /' in first command but got {first_cmd:?}")
     }
 
@@ -124,9 +131,11 @@ pub fn input_generator(input: &str) -> Node {
                 let arg = args[0].as_str();
                 match arg {
                     "/" => current_path.clear(),
-                    ".." => { current_path.pop().unwrap(); }
+                    ".." => {
+                        current_path.pop().unwrap();
+                    }
                     name if !name.starts_with('/') => current_path.push(name),
-                    _ => panic!("unknown arg for cd: '{arg}'")
+                    _ => panic!("unknown arg for cd: '{arg}'"),
                 };
             }
             Command::Ls(CommandInfo { args: _, output }) => {
@@ -136,7 +145,8 @@ pub fn input_generator(input: &str) -> Node {
                         "dir" => root.add_child(&current_path, Node::new_dir(name)).unwrap(),
                         size_str => {
                             let size = usize::from_str(size_str).unwrap();
-                            root.add_child(&current_path, Node::new_file(name, size)).unwrap()
+                            root.add_child(&current_path, Node::new_file(name, size))
+                                .unwrap()
                         }
                     }
                 }
