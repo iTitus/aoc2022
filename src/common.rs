@@ -41,10 +41,10 @@ impl TryFrom<char> for Direction {
 
     fn try_from(value: char) -> Result<Self, Self::Error> {
         Ok(match value {
-            'N' | 'U' => Self::North,
-            'S' | 'D' => Self::South,
-            'E' | 'R' => Self::East,
-            'W' | 'L' => Self::West,
+            'N' | 'U' | '^' => Self::North,
+            'S' | 'D' | 'v' => Self::South,
+            'E' | 'R' | '>' => Self::East,
+            'W' | 'L' | '<' => Self::West,
             _ => {
                 return Err(());
             }
@@ -242,7 +242,9 @@ pub fn parse_vec<T: Scalar + FromStr, const D: usize>(
     s: &str,
 ) -> Result<SVector<T, D>, ParseVecError<<T as FromStr>::Err>> {
     let mut it = s
-        .trim_matches(|c: char| matches!(c, '(' | ')' | '[' | ']' | '{' | '}' | '|') || c.is_whitespace())
+        .trim_matches(|c: char| {
+            matches!(c, '(' | ')' | '[' | ']' | '{' | '}' | '|') || c.is_whitespace()
+        })
         .split(|c: char| matches!(c, ',' | ';' | '|') || c.is_whitespace())
         .map(str::trim)
         .filter(|s| !s.is_empty())
