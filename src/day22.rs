@@ -64,7 +64,7 @@ pub enum Command {
 pub fn input_generator(input: &str) -> (usize, usize, FxHashMap<Pos, Face>, Vec<Command>) {
     fn min_face_len(it: impl IntoIterator<Item = char>) -> usize {
         it.into_iter()
-            .group_by(|&c| c == ' ')
+            .chunk_by(|&c| c == ' ')
             .into_iter()
             .filter_map(|(_, g)| {
                 let c = g.count();
